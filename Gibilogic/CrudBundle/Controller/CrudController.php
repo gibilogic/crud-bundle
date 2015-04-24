@@ -43,50 +43,22 @@ abstract class CrudController extends Controller
      * Index action.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param array $filters
      * @return array
      */
-    public function executeIndexAction(Request $request, $filters = array())
+    public function executeIndexAction(Request $request)
     {
-        $routePrefix = $this->getRoutePrefix();
-        $entityService = $this->getEntityService();
-
-        $options = array(
-            'filters' => $entityService->getFilters($request, $routePrefix, $filters),
-            'sorting' => $entityService->getSorting($request, $routePrefix)
-        );
-
-        return array(
-            'entities' => $entityService->getRepository()->getEntities($options),
-            'options' => $options
-        );
+        return $this->getEntityService()->getEntities($request, $this->getRoutePrefix());
     }
 
     /**
      * Paginated index action.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param array $filters
      * @return array
      */
-    public function executeIndexPaginatedAction(Request $request, $filters = array())
+    public function executeIndexPaginatedAction(Request $request)
     {
-        $routePrefix = $this->getRoutePrefix();
-        $entityService = $this->getEntityService();
-
-        $options = array(
-            'filters' => $entityService->getFilters($request, $routePrefix, $filters),
-            'sorting' => $entityService->getSorting($request, $routePrefix),
-            'page' => $entityService->getPage($request),
-            'elementsPerPage' => $this->container->getParameter('elements_per_page')
-        );
-
-        $entities = $entityService->getRepository()->getPaginatedEntities($options);
-        return array(
-            'entities' => $entities,
-            'options' => $options,
-            'pages' => ceil(count($entities) / $options['elementsPerPage'])
-        );
+        return $this->getEntityService()->getEntities($request, $this->getRoutePrefix(), true);
     }
 
     /**

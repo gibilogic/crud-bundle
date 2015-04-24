@@ -31,14 +31,21 @@ abstract class EntityService
     private $repo;
 
     /**
+     * @var integer $elementsPerPage
+     */
+    private $elementsPerPage;
+
+    /**
      * Constructor.
      *
      * @param \Doctrine\ORM\EntityManager $em
+     * @param integer $elementsPerPage
      */
-    public function __construct(EntityManager $em)
+    public function __construct(EntityManager $em, $elementsPerPage)
     {
         $this->em = $em;
         $this->repo = $this->em->getRepository($this->getEntityName());
+        $this->elementsPerPage = $elementsPerPage;
     }
 
     /**
@@ -60,6 +67,41 @@ abstract class EntityService
     public function getEntity($id)
     {
         return $this->repo->find($id);
+    }
+
+    /**
+     * Returns a list of entities.
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param string $routePrefix
+     * @param boolean $isPaginated
+     * @param array $filters
+     * @return array
+     */
+    public function getEntities(Request $request, $routePrefix, $isPaginated = false, $filters = array())
+    {
+        $options = array(
+            'filters' => $this->getFilters($request, $routePrefix, $filters),
+            'sorting' => $this->getSorting($request, $routePrefix)
+        );
+
+        if (!$isPaginated)
+        {
+            return array(
+                'entities' => $this->getRepository()->getEntities($options),
+                'options' => $options
+            );
+        }
+
+        $options['page'] = $this->getPage($request);
+        $options['elementsPerPage'] = $this->elementsPerPage;
+
+        $entities = $this->getRepository()->getPaginatedEntities($options);
+        return array(
+            'entities' => $entities,
+            'options' => $options,
+            'pages' => ceil(count($entities) / $options['elementsPerPage'])
+        );
     }
 
     /**
