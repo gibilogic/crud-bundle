@@ -72,8 +72,7 @@ abstract class CrudController extends Controller
         $entityService = $this->getEntityService();
 
         $entity = $entityService->getEntity($id);
-        if (empty($entity))
-        {
+        if (empty($entity)) {
             return $this->redirectOnNotFound($id);
         }
 
@@ -112,8 +111,7 @@ abstract class CrudController extends Controller
         $entity = $entityService->getNewEntity();
         $form = $entityService->createEntityForm($entity, array('method' => 'POST'));
 
-        if (!$entityService->createEntity($request, $entity, $form))
-        {
+        if (!$entityService->createEntity($request, $entity, $form)) {
             $this->addErrorFlash($this->get('session'), "Ci sono uno o più errori nella form di creazione entità.");
             return array(
                 'entity' => $entity,
@@ -136,8 +134,7 @@ abstract class CrudController extends Controller
         $entityService = $this->getEntityService();
 
         $entity = $entityService->getEntity($id);
-        if ($entity === null)
-        {
+        if ($entity === null) {
             return $this->redirectOnNotFound($id);
         }
 
@@ -160,14 +157,12 @@ abstract class CrudController extends Controller
         $entityService = $this->getEntityService();
 
         $entity = $entityService->getEntity($id);
-        if ($entity === null)
-        {
+        if ($entity === null) {
             return $this->redirectOnNotFound($id);
         }
 
         $form = $entityService->createEntityForm($entity, array('method' => 'PUT'));
-        if (!$entityService->updateEntity($request, $entity, $form))
-        {
+        if (!$entityService->updateEntity($request, $entity, $form)) {
             $this->addErrorFlash($this->get('session'), "Ci sono uno o più errori nella form di modifica entità.");
             return array(
                 'entity' => $entity,
@@ -191,13 +186,11 @@ abstract class CrudController extends Controller
         $entityService = $this->getEntityService();
 
         $entity = $entityService->getEntity($id);
-        if (empty($entity))
-        {
+        if (empty($entity)) {
             return $this->redirectOnNotFound($id);
         }
 
-        if (!$entityService->removeEntity($id))
-        {
+        if (!$entityService->removeEntity($id)) {
             $this->addErrorFlash($this->get('session'), "Impossibile rimuovere l'entità con ID '%d'.", $id);
             return $this->redirect($this->generateUrl($this->getRoutePrefix() . '_show', array('id' => $id)));
         }

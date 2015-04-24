@@ -19,7 +19,6 @@ use Symfony\Component\HttpFoundation\Request;
  */
 abstract class EntityService
 {
-
     /**
      * @var \Doctrine\ORM\EntityManager $em
      */
@@ -85,8 +84,7 @@ abstract class EntityService
             'sorting' => $this->getSorting($request, $routePrefix)
         );
 
-        if (!$isPaginated)
-        {
+        if (!$isPaginated) {
             return array(
                 'entities' => $this->getRepository()->getEntities($options),
                 'options' => $options
@@ -115,18 +113,14 @@ abstract class EntityService
     public function createEntity(Request $request, $entity, $form)
     {
         $form->handleRequest($request);
-        if (!$form->isValid())
-        {
+        if (!$form->isValid()) {
             return false;
         }
 
-        try
-        {
+        try {
             $this->em->persist($entity);
             $this->em->flush();
-        }
-        catch (\Exception $ex)
-        {
+        } catch (\Exception $ex) {
             return false;
         }
 
@@ -143,17 +137,13 @@ abstract class EntityService
     public function updateEntity(Request $request, $entity, $form)
     {
         $form->handleRequest($request);
-        if (!$form->isValid())
-        {
+        if (!$form->isValid()) {
             return false;
         }
 
-        try
-        {
+        try {
             $this->em->flush();
-        }
-        catch (\Exception $ex)
-        {
+        } catch (\Exception $ex) {
             return false;
         }
 
@@ -168,14 +158,11 @@ abstract class EntityService
      */
     public function removeEntity($id)
     {
-        try
-        {
+        try {
             $entity = $this->getEntity($id);
             $this->em->remove($entity);
             $this->em->flush();
-        }
-        catch (\Exception $ex)
-        {
+        } catch (\Exception $ex) {
             return false;
         }
 
@@ -192,9 +179,7 @@ abstract class EntityService
     public function createEntityForm($entity = null, $options = array())
     {
         return $this->container->get('form.factory')->create(
-            $this->getNewEntityType(),
-            empty($entity) ? $this->getNewEntity() : $entity,
-            $options
+                $this->getNewEntityType(), empty($entity) ? $this->getNewEntity() : $entity, $options
         );
     }
 
@@ -226,19 +211,15 @@ abstract class EntityService
         $filters = array();
 
         // Extracts filters from session
-        foreach ($request->getSession()->all() as $key => $value)
-        {
-            if (strpos($key, $prefix) === 0)
-            {
+        foreach ($request->getSession()->all() as $key => $value) {
+            if (strpos($key, $prefix) === 0) {
                 $filters[str_replace($prefix, '', $key)] = $value;
             }
         }
 
         // Extract filters from POST request
-        foreach ($request->request->all() as $key => $value)
-        {
-            if (strpos($key, $prefix) === 0)
-            {
+        foreach ($request->request->all() as $key => $value) {
+            if (strpos($key, $prefix) === 0) {
                 $filters[str_replace($prefix, '', $key)] = $value;
             }
         }
@@ -255,8 +236,7 @@ abstract class EntityService
     public function getPage(Request $request)
     {
         $page = $request->query->get('page', 1);
-        if (empty($page) || !is_numeric($page) || $page < 1)
-        {
+        if (empty($page) || !is_numeric($page) || $page < 1) {
             $page = 1;
         }
 
@@ -274,10 +254,8 @@ abstract class EntityService
         $prefix .= '_filter_';
         $session = $request->getSession();
 
-        foreach ($request->request->all() as $key => $value)
-        {
-            if (strpos($key, $prefix) === 0)
-            {
+        foreach ($request->request->all() as $key => $value) {
+            if (strpos($key, $prefix) === 0) {
                 $session->set($key, $value);
             }
         }
@@ -294,10 +272,8 @@ abstract class EntityService
         $prefix .= '_filter_';
         $session = $request->getSession();
 
-        foreach ($request->getSession()->all() as $key => $value)
-        {
-            if (strpos($key, $prefix) === 0)
-            {
+        foreach ($request->getSession()->all() as $key => $value) {
+            if (strpos($key, $prefix) === 0) {
                 $session->remove($key);
             }
         }
@@ -327,8 +303,7 @@ abstract class EntityService
     protected function getSortField(Request $request, $prefix)
     {
         $sortField = $request->query->get('sort', null);
-        if (!empty($sortField))
-        {
+        if (!empty($sortField)) {
             $request->getSession()->set($prefix . '_sort_field', $sortField);
             return $sortField;
         }
@@ -346,8 +321,7 @@ abstract class EntityService
     protected function getSortOrder(Request $request, $prefix)
     {
         $sortOrder = $request->query->get('order', null);
-        if (!empty($sortOrder))
-        {
+        if (!empty($sortOrder)) {
             $request->getSession()->set($prefix . '_sort_order', $sortOrder);
             return $sortOrder;
         }

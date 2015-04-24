@@ -24,8 +24,7 @@ trait SluggableTrait
      */
     protected function slugify($string, $separator = '-')
     {
-        if (empty($string))
-        {
+        if (empty($string)) {
             return null;
         }
 
@@ -52,13 +51,10 @@ trait SluggableTrait
         );
 
         $string = (string) str_replace(array("\r", "\n"), '', $string);
-        foreach ($replacement as $output => $input)
-        {
+        foreach ($replacement as $output => $input) {
             $string = str_replace($input, $output, $string);
         }
 
-        $string = preg_replace('#(' . $separator . '+)#', $separator, preg_replace('#[\s]+#', $separator, rtrim(trim(preg_replace('#[^a-z0-9.\s]#', ' ', mb_strtolower($string, mb_internal_encoding()))))));
-
-        return $string;
+        return preg_replace('#(' . $separator . '+)#', $separator, preg_replace('#[\s]+#', $separator, rtrim(trim(preg_replace('#[^a-z0-9.\s]#', ' ', mb_strtolower($string, mb_internal_encoding()))))));
     }
 }

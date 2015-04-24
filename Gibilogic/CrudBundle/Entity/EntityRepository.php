@@ -85,13 +85,11 @@ class EntityRepository extends BaseRepository
     {
         $queryBuilder = $this->getBaseQueryBuilder();
 
-        if (!empty($options['filters']))
-        {
+        if (!empty($options['filters'])) {
             $this->addFilters($queryBuilder, $options['filters']);
         }
 
-        if (!empty($options['sorting']))
-        {
+        if (!empty($options['sorting'])) {
             $this->addSorting($queryBuilder, $options['sorting']);
         }
 
@@ -107,22 +105,17 @@ class EntityRepository extends BaseRepository
      */
     protected function addFilters(QueryBuilder $queryBuilder, $filters = array())
     {
-        foreach ($filters as $field => $value)
-        {
+        foreach ($filters as $field => $value) {
             $methodName = sprintf('add%sFilter', ucfirst($field));
-            if (method_exists($this, $methodName))
-            {
+            if (method_exists($this, $methodName)) {
                 $this->$methodName($queryBuilder, $value);
                 continue;
             }
 
             $field = $this->addEntityAlias($field);
-            if (is_array($value))
-            {
+            if (is_array($value)) {
                 $queryBuilder->andWhere($queryBuilder->expr()->in($field, implode(',', $value)));
-            }
-            else
-            {
+            } else {
                 $queryBuilder->andWhere($queryBuilder->expr()->eq($field, $value));
             }
         }
@@ -142,15 +135,13 @@ class EntityRepository extends BaseRepository
         $sanitizedSortField = $this->sanitizeSortField($options);
         $sanitizedSordOrder = $this->sanitizeSortOrder($options);
 
-        if (!empty($sanitizedSortField))
-        {
+        if (!empty($sanitizedSortField)) {
             return $queryBuilder->orderBy(
                     $this->addEntityAlias($sanitizedSortField), $sanitizedSordOrder
             );
         }
 
-        foreach ($this->getDefaultSorting() as $field => $sortOrder)
-        {
+        foreach ($this->getDefaultSorting() as $field => $sortOrder) {
             $queryBuilder->addOrderBy(
                 $this->addEntityAlias($field), $sortOrder
             );
@@ -170,13 +161,11 @@ class EntityRepository extends BaseRepository
      */
     protected function addPagination(QueryBuilder $queryBuilder, $elementsPerPage, $page = 1)
     {
-        if (!is_numeric($page))
-        {
+        if (!is_numeric($page)) {
             throw new \InvalidArgumentException(sprintf("The page number must be an integer number, '%s' given.", $page), 500);
         }
 
-        if (!is_numeric($elementsPerPage))
-        {
+        if (!is_numeric($elementsPerPage)) {
             throw new \InvalidArgumentException(sprintf("The number of elements per page must be an integer number, '%s' given.", $elementsPerPage), 500);
         }
 
@@ -194,13 +183,11 @@ class EntityRepository extends BaseRepository
     private function sanitizeSortField($options)
     {
         $field = !empty($options['field']) ? $options['field'] : null;
-        if (empty($field))
-        {
+        if (empty($field)) {
             return null;
         }
 
-        if (!in_array($field, $this->getSortableFields()))
-        {
+        if (!in_array($field, $this->getSortableFields())) {
             return null;
         }
 
@@ -215,15 +202,12 @@ class EntityRepository extends BaseRepository
      */
     private function sanitizeSortOrder($options)
     {
-        $order = !empty($options['order']) ? $options['order'] : null;
-        if (empty($order))
-        {
+        $order = !empty($options['order']) ? strtolower($options['order']) : null;
+        if (empty($order)) {
             return 'asc';
         }
 
-        $order = strtolower($order);
-        if ($order != 'asc' && $order != 'desc')
-        {
+        if ($order != 'asc' && $order != 'desc') {
             return 'asc';
         }
 
@@ -239,8 +223,7 @@ class EntityRepository extends BaseRepository
      */
     private function addEntityAlias($field)
     {
-        if (strpos($field, '.') !== false)
-        {
+        if (strpos($field, '.') !== false) {
             return $field;
         }
 
