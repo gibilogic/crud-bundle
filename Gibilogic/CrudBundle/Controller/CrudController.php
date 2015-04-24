@@ -11,7 +11,6 @@ namespace Gibilogic\CrudBundle\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 
 /**
  * CrudController class.
@@ -74,19 +73,19 @@ abstract class CrudController extends Controller
     {
         $routePrefix = $this->getRoutePrefix();
         $entityService = $this->getEntityService();
-        $currentPage = $request->get('page', 1);
 
         $options = array(
             'filters' => $entityService->getFilters($request, $routePrefix, $filters),
             'sorting' => $entityService->getSorting($request, $routePrefix),
-            'page' => $currentPage
+            'page' => $entityService->getPage($request),
+            'elementsPerPage' => $this->container->getParameter('elements_per_page')
         );
 
         $entities = $entityService->getRepository()->getPaginatedEntities($options);
         return array(
             'entities' => $entities,
             'options' => $options,
-            'pages' => ceil(count($entities) / $this->container->getParameter('elements_per_page'))
+            'pages' => ceil(count($entities) / $options['elementsPerPage'])
         );
     }
 

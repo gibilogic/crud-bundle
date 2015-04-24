@@ -201,12 +201,24 @@ abstract class EntityService
             }
         }
 
-        if (empty($overrideFilters))
+        return empty($overrideFilters) ? $filters : array_merge($filters, $overrideFilters);
+    }
+
+    /**
+     * Returns the current page number.
+     * 
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return int
+     */
+    public function getPage(Request $request)
+    {
+        $page = $request->query->get('page', 1);
+        if (empty($page) || !is_numeric($page) || $page < 1)
         {
-            return $filters;
+            $page = 1;
         }
 
-        return array_merge($filters, $overrideFilters);
+        return $page;
     }
 
     /**
