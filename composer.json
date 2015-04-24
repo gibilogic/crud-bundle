@@ -3,11 +3,12 @@
     "type": "symfony-bundle",
     "description": "GiBiLogic CRUD Bundle",
     "keywords": [ "crud" ],
-    "homepage": "http://www.gigilogic.com",
+    "homepage": "http://www.gibilogic.com",
     "license": "MIT",
     "authors": [
         {
             "name": "Matteo Guindani",
+            "homepage": "https://github.com/Ingannatore",
             "email": "m.guindani@gibilogic.com"
         }
     ],
@@ -18,7 +19,6 @@
         "doctrine/doctrine-bundle": "1.2.*"
     },
     "autoload": {
-        "psr-0": { "Gibilogic\\CrudBundle": "" }
-    },
-    "target-dir": "Gibilogic/CrudBundle"
+        "psr-0": { "Gibilogic\\CrudBundle\\": "src/" }
+    }
 }
