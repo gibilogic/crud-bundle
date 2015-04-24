@@ -1,0 +1,24 @@
+{
+    "name": "gibilogic/crud-bundle",
+    "type": "symfony-bundle",
+    "description": "GiBiLogic CRUD Bundle",
+    "keywords": [ "crud" ],
+    "homepage": "http://www.gigilogic.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Matteo Guindani",
+            "email": "m.guindani@gibilogic.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3",
+        "symfony/symfony": "2.3.*",
+        "doctrine/orm": "~2.2,>=2.2.3",
+        "doctrine/doctrine-bundle": "1.2.*"
+    },
+    "autoload": {
+        "psr-0": { "Gibilogic\\CrudBundle": "" }
+    },
+    "target-dir": "Gibilogic/CrudBundle"
+}

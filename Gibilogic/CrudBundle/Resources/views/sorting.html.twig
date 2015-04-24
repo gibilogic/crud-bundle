@@ -1,0 +1,15 @@
+{% set nextOrder = 'asc' %}
+{% if (sort == fieldName) and (order == 'asc') %}
+    {% set nextOrder = 'desc' %}
+{% endif %}
+<a href="{{ path(routeName, routeParams|merge({ 'sort': fieldName, 'order': nextOrder, 'page': page|default(null) })) }}">
+    {{ fieldTitle }}
+</a>
+{% if sort == fieldName %}
+    &nbsp;
+    {% if order|lower == 'asc' %}
+        <span class="glyphicon glyphicon-chevron-up"></span>
+    {% else %}
+        <span class="glyphicon glyphicon-chevron-down"></span>
+    {% endif %}
+{% endif %}
