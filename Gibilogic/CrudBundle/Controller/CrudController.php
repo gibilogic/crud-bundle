@@ -113,14 +113,14 @@ abstract class CrudController extends Controller
         $form = $entityService->createEntityForm($entity, array('method' => 'POST'));
 
         if (!$entityService->createEntity($request, $entity, $form)) {
-            $this->addErrorFlash($this->get('session'), "Ci sono uno o più errori nella form di creazione entità.");
+            $this->addErrorFlash($this->get('session'), $this->getFormErrorMessage());
             return array(
                 'entity' => $entity,
                 'form' => $form->createView(),
             );
         }
 
-        $this->addNoticeFlash($this->get('session'), "L'entità con ID '%d' è stata correttamente salvata.", $entity->getId());
+        $this->addNoticeFlash($this->get('session'), $this->getEntitySavedMessage($entity));
         return $this->redirect($this->generateUrl($this->getRoutePrefix() . '_index'));
     }
 
@@ -164,7 +164,7 @@ abstract class CrudController extends Controller
 
         $form = $entityService->createEntityForm($entity, array('method' => 'PUT'));
         if (!$entityService->updateEntity($request, $entity, $form)) {
-            $this->addErrorFlash($this->get('session'), "Ci sono uno o più errori nella form di modifica entità.");
+            $this->addErrorFlash($this->get('session'), $this->getFormErrorMessage());
             return array(
                 'entity' => $entity,
                 'form' => $form->createView(),
@@ -172,7 +172,7 @@ abstract class CrudController extends Controller
             );
         }
 
-        $this->addNoticeFlash($this->get('session'), "L'entità con ID '%d' è stata correttamente salvata.", $id);
+        $this->addNoticeFlash($this->get('session'), $this->getEntitySavedMessage($entity));
         return $this->redirect($this->generateUrl($this->getRoutePrefix() . '_show', array('id' => $id)));
     }
 
@@ -184,12 +184,13 @@ abstract class CrudController extends Controller
      */
     public function executeDeleteAction($id)
     {
-        if (!$this->getEntityService()->removeEntity($id)) {
-            $this->addErrorFlash($this->get('session'), "Impossibile rimuovere l'entità con ID '%d'.", $id);
+        $entity = $this->getEntityService()->removeEntity($id);
+        if ($entity === false) {
+            $this->addErrorFlash($this->get('session'), $this->getDeleteErrorMessage($id));
             return $this->redirect($this->generateUrl($this->getRoutePrefix() . '_show', array('id' => $id)));
         }
 
-        $this->addNoticeFlash($this->get('session'), "L'entità con ID '%d' è stata correttamente rimossa.", $id);
+        $this->addNoticeFlash($this->get('session'), $this->getEntityDeletedMessage($entity));
         return $this->redirect($this->generateUrl($this->getRoutePrefix() . '_index'));
     }
 
@@ -201,7 +202,61 @@ abstract class CrudController extends Controller
      */
     protected function redirectOnNotFound($id)
     {
-        $this->addWarningFlash($this->get('session'), "L'entità con ID '%d' non esiste.", $id);
+        $this->addWarningFlash($this->get('session'), $this->getNotFoundErrorMessage($id));
         return $this->redirect($this->generateUrl($this->getRoutePrefix() . '_index'));
+    }
+
+    /**
+     * Returns the "entity succesfully saved" message.
+     *
+     * @param object $entity
+     * @return string
+     */
+    protected function getEntitySavedMessage($entity)
+    {
+        return sprintf("The entity with ID '%d' has been saved.", $entity->getId());
+    }
+
+    /**
+     * Returns the "entity succesfully deleted" message.
+     * 
+     * @param object $entity
+     * @return string
+     */
+    protected function getEntityDeletedMessage($entity)
+    {
+        return sprintf("The entity with ID '%d' has been deleted.", $entity->getId());
+    }
+
+    /**
+     * Returns the "form has errors" message.
+     *
+     * @return string
+     */
+    protected function getFormErrorMessage()
+    {
+        return "There are one or more errors inside of the entity's form.";
+    }
+
+    /**
+     * Returns the "unable to delete entity" message.
+     * 
+     * @param integer $id
+     * @return string
+     */
+    protected function getDeleteErrorMessage($id)
+    {
+        return sprintf("Unable to delete the entity with ID '%d'.", $id);
+    }
+
+    /**
+     * Returns the "entity not found" message.
+     * 
+     * @param integer $id
+     * @return string
+     */
+    protected function getNotFoundErrorMessage($id)
+    {
+        return sprintf("The entity with ID '%d' does not exist.", $id);
     }
 }

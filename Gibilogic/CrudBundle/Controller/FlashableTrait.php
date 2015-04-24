@@ -22,11 +22,10 @@ trait FlashableTrait
      *
      * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
      * @param string $message
-     * @param mixed $params
      */
-    protected function addNoticeFlash(SessionInterface $session, $message, $params = array())
+    protected function addNoticeFlash(SessionInterface $session, $message)
     {
-        $this->addUserFlash($session, 'notice', $message, is_array($params) ? $params : array($params));
+        $this->addUserFlash($session, 'notice', $message);
     }
 
     /**
@@ -34,11 +33,10 @@ trait FlashableTrait
      *
      * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
      * @param string $message
-     * @param mixed $params
      */
-    protected function addWarningFlash(SessionInterface $session, $message, $params = array())
+    protected function addWarningFlash(SessionInterface $session, $message)
     {
-        $this->addUserFlash($session, 'warning', $message, is_array($params) ? $params : array($params));
+        $this->addUserFlash($session, 'warning', $message);
     }
 
     /**
@@ -46,11 +44,10 @@ trait FlashableTrait
      *
      * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
      * @param string $message
-     * @param mixed $params
      */
-    protected function addErrorFlash(SessionInterface $session, $message, $params = array())
+    protected function addErrorFlash(SessionInterface $session, $message)
     {
-        $this->addUserFlash($session, 'error', $message, is_array($params) ? $params : array($params));
+        $this->addUserFlash($session, 'error', $message);
     }
 
     /**
@@ -59,10 +56,9 @@ trait FlashableTrait
      * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
      * @param string $type
      * @param string $message
-     * @param array $params
      */
-    protected function addUserFlash(SessionInterface $session, $type, $message, array $params)
+    protected function addUserFlash(SessionInterface $session, $type, $message)
     {
-        $session->getFlashBag()->add($type, empty($params) ? $message : vsprintf($message, $params));
+        $session->getFlashBag()->add($type, $message);
     }
 }
