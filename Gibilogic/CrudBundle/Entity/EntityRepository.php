@@ -109,37 +109,24 @@ class EntityRepository extends BaseRepository
     {
         foreach ($filters as $field => $value)
         {
-            if ($field == 'text')
+            $methodName = sprintf('add%sFilter', ucfirst($field));
+            if (method_exists($this, $methodName))
             {
-                $this->addTextFilter($queryBuilder, $value);
+                $this->$methodName($queryBuilder, $value);
+                continue;
+            }
+
+            $field = $this->addEntityAlias($field);
+            if (is_array($value))
+            {
+                $queryBuilder->andWhere($queryBuilder->expr()->in($field, implode(',', $value)));
             }
             else
             {
-                $field = $this->addEntityAlias($field);
-
-                if (is_array($value))
-                {
-                    $queryBuilder->andWhere($queryBuilder->expr()->in($field, implode(',', $value)));
-                }
-                else
-                {
-                    $queryBuilder->andWhere($queryBuilder->expr()->eq($field, $value));
-                }
+                $queryBuilder->andWhere($queryBuilder->expr()->eq($field, $value));
             }
         }
 
-        return $queryBuilder;
-    }
-
-    /**
-     * Adds the text filter to the QueryBuilder instance.
-     *
-     * @param \Doctrine\ORM\QueryBuilder $queryBuilder
-     * @param string $text
-     * @return \Doctrine\ORM\QueryBuilder
-     */
-    protected function addTextFilter(QueryBuilder $queryBuilder, $text)
-    {
         return $queryBuilder;
     }
 
