@@ -71,8 +71,9 @@ abstract class CrudController extends Controller
     {
         $entityService = $this->getEntityService();
 
-        $entity = $entityService->getEntity($id);
-        if (empty($entity)) {
+        try {
+            $entity = $entityService->getEntity($id);
+        } catch (\Exception $ex) {
             return $this->redirectOnNotFound($id);
         }
 
@@ -183,14 +184,7 @@ abstract class CrudController extends Controller
      */
     public function executeDeleteAction($id)
     {
-        $entityService = $this->getEntityService();
-
-        $entity = $entityService->getEntity($id);
-        if (empty($entity)) {
-            return $this->redirectOnNotFound($id);
-        }
-
-        if (!$entityService->removeEntity($id)) {
+        if (!$this->getEntityService()->removeEntity($id)) {
             $this->addErrorFlash($this->get('session'), "Impossibile rimuovere l'entità con ID '%d'.", $id);
             return $this->redirect($this->generateUrl($this->getRoutePrefix() . '_show', array('id' => $id)));
         }

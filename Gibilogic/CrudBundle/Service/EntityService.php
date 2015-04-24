@@ -10,6 +10,7 @@
 namespace Gibilogic\CrudBundle\Service;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\NoResultException;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -58,14 +59,21 @@ abstract class EntityService
     }
 
     /**
-     * Returns an instance of the entity, NULL on error.
+     * Returns an instance of the entity.
      * 
      * @param integer $id
      * @return mixed
+     * @throws \Doctrine\ORM\NoResultException
      */
     public function getEntity($id)
     {
-        return $this->repo->find($id);
+        $entity = $this->repo->find($id);
+        if ($entity === null)
+        {
+            throw new NoResultException(sprintf("Unable to find a '%s' entity with ID '%d'.", $this->getEntityName(), $id));
+        }
+
+        return $entity;
     }
 
     /**

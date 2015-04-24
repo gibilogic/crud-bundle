@@ -156,17 +156,17 @@ class EntityRepository extends BaseRepository
      * @param \Doctrine\ORM\QueryBuilder $queryBuilder
      * @param integer $elementsPerPage
      * @param integer $page
-     *
      * @return \Doctrine\ORM\QueryBuilder
+     * @throws \InvalidArgumentException
      */
     protected function addPagination(QueryBuilder $queryBuilder, $elementsPerPage, $page = 1)
     {
         if (!is_numeric($page)) {
-            throw new \InvalidArgumentException(sprintf("The page number must be an integer number, '%s' given.", $page), 500);
+            throw new \InvalidArgumentException(sprintf("The page number must be an integer number, '%s' given.", gettype($page)), 500);
         }
 
         if (!is_numeric($elementsPerPage)) {
-            throw new \InvalidArgumentException(sprintf("The number of elements per page must be an integer number, '%s' given.", $elementsPerPage), 500);
+            throw new \InvalidArgumentException(sprintf("The number of elements per page must be an integer number, '%s' given.", gettype($elementsPerPage)), 500);
         }
 
         return $queryBuilder
