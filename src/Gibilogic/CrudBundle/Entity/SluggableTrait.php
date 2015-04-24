@@ -19,7 +19,6 @@ trait SluggableTrait
      * Returns the slugified version of the string.
      *
      * @param string $string
-     *
      * @return string
      */
     protected function slugify($string, $separator = '-')

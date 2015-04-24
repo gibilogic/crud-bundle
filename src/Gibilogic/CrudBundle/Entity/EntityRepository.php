@@ -218,7 +218,6 @@ class EntityRepository extends BaseRepository
      * Adds the entity alias to the field (if not already present).
      *
      * @param string $field
-     *
      * @return string
      */
     private function addEntityAlias($field)

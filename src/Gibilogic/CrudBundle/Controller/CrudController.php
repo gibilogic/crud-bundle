@@ -25,7 +25,6 @@ abstract class CrudController extends Controller
      * Returns the controller's base route prefix.
      *
      * @abstract
-     *
      * @return string
      */
     abstract protected function getRoutePrefix();
@@ -34,7 +33,6 @@ abstract class CrudController extends Controller
      * Returns the controller's base route prefix.
      *
      * @abstract
-     * 
      * @return \Gibilogic\CrudBundle\Service\EntityService
      */
     abstract protected function getEntityService();
