@@ -1,1 +1,3 @@
 services:
+    gibi.slugger:
+        class: Gibilogic\CrudBundle\Service\Slugger

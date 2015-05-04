@@ -2,26 +2,27 @@
 
 /**
  * @package     Gibilogic\CrudBundle
- * @subpackage  Entity
+ * @subpackage  Service
  * @author      GiBiLogic <info@gibilogic.com>
  * @authorUrl   http://www.gibilogic.com
  */
 
-namespace Gibilogic\CrudBundle\Entity;
+namespace Gibilogic\CrudBundle\Service;
 
 /**
- * Sluggable trait.
+ * Slugger class.
  */
-trait SluggableTrait
+class Slugger
 {
 
     /**
      * Returns the slugified version of the string.
      *
      * @param string $string
+     * @param string $separator
      * @return string
      */
-    protected function slugify($string, $separator = '-')
+    public function slugify($string, $separator = '-')
     {
         if (empty($string)) {
             return null;
