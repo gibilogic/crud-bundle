@@ -9,7 +9,6 @@
 
 namespace Gibilogic\CrudBundle\Service;
 
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\NoResultException;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -21,14 +20,9 @@ use Symfony\Component\HttpFoundation\Request;
 abstract class EntityService
 {
     /**
-     * @var \Doctrine\ORM\EntityManager $em
+     * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
-    private $em;
-
-    /**
-     * @var Gibilogic\CrudBundle\Entity\EntityRepository $repo
-     */
-    private $repo;
+    private $container;
 
     /**
      * @var integer $elementsPerPage
@@ -38,13 +32,12 @@ abstract class EntityService
     /**
      * Constructor.
      *
-     * @param \Doctrine\ORM\EntityManager $em
+     * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
      * @param integer $elementsPerPage
      */
-    public function __construct(EntityManager $em, $elementsPerPage)
+    public function __construct(ContainerInterface $container, $elementsPerPage)
     {
-        $this->em = $em;
-        $this->repo = $this->em->getRepository($this->getEntityName());
+        $this->container = $container;
         $this->elementsPerPage = $elementsPerPage;
     }
 
@@ -55,7 +48,7 @@ abstract class EntityService
      */
     public function getRepository()
     {
-        return $this->repo;
+        return $this->container->get('doctrine')->getRepository($this->getEntityName());
     }
 
     /**
@@ -67,9 +60,8 @@ abstract class EntityService
      */
     public function getEntity($id)
     {
-        $entity = $this->repo->find($id);
-        if ($entity === null)
-        {
+        $entity = $this->getRepository()->find($id);
+        if ($entity === null) {
             throw new NoResultException(sprintf("Unable to find a '%s' entity with ID '%d'.", $this->getEntityName(), $id));
         }
 
@@ -125,9 +117,10 @@ abstract class EntityService
             return false;
         }
 
+        $em = $this->container->get('doctrine')->getManager();
         try {
-            $this->em->persist($entity);
-            $this->em->flush();
+            $em->persist($entity);
+            $em->flush();
         } catch (\Exception $ex) {
             return false;
         }
@@ -150,7 +143,7 @@ abstract class EntityService
         }
 
         try {
-            $this->em->flush();
+            $this->container->get('doctrine')->getManager()->flush();
         } catch (\Exception $ex) {
             return false;
         }
@@ -166,10 +159,11 @@ abstract class EntityService
      */
     public function removeEntity($id)
     {
+        $em = $this->container->get('doctrine')->getManager();
         try {
             $entity = $this->getEntity($id);
-            $this->em->remove($entity);
-            $this->em->flush();
+            $em->remove($entity);
+            $em->flush();
         } catch (\Exception $ex) {
             return false;
         }
