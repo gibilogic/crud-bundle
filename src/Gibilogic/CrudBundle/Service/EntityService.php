@@ -9,8 +9,9 @@
 
 namespace Gibilogic\CrudBundle\Service;
 
-use Doctrine\ORM\NoResultException;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\ORM\NoResultException;
 
 /**
  * EntityService class.
