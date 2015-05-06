@@ -23,12 +23,12 @@ abstract class EntityService
     /**
      * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
-    private $container;
+    protected $container;
 
     /**
      * @var integer $elementsPerPage
      */
-    private $elementsPerPage;
+    protected $elementsPerPage;
 
     /**
      * Constructor.
