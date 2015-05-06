@@ -1,7 +1,7 @@
 {% set isEmpty = (pages == 0) %}
 {% set isFirstPage = (currentPage == 1) %}
 {% set isLastPage = (currentPage == pages) %}
-<ul class="pagination pull-right">
+<ul class="pagination pull-right" data-baseurl="{{ url(routeName, routeParams|merge({ 'page': 0 })) }}">
     <li class="{% if isFirstPage %}disabled{% endif %}">
         <a href="{{ isFirstPage ? 'javascript:;' : path(routeName, routeParams|merge({ 'page': 1 })) }}">&laquo;</a>
     </li>
@@ -10,7 +10,7 @@
     </li>
     <li class="input-container">
         <span>
-            <input type="text" value="{{ currentPage }}" class="form-control input-sm" />
+            <input type="text" value="{{ currentPage }}" class="form-control input-sm" data-page="{{ currentPage }}" data-pages="{{ pages }}" />
             &nbsp;di&nbsp;{{ pages > 0 ? pages : 1 }}
         </span>
     </li>
@@ -21,24 +21,3 @@
         <a href="{{ isLastPage or isEmpty ? 'javascript:;' : path(routeName, routeParams|merge({ 'page': pages > 0 ? pages : 1 })) }}">&raquo;</a>
     </li>
 </ul>
-<script>
-var currentPage = {{ currentPage }};
-var pages = {{ pages }};
-var baseRouteUrl = "{{ url(routeName, routeParams|merge({ 'page': 0 })) }}";
-$(".pagination input").keydown(function(event) {
-    if (event.which == 13) {
-        var pageNumber = parseInt($(".pagination input").val());
-        if (!pageNumber) {
-            pageNumber = 1;
-            $(".pagination input").val(1);
-        }
-
-        if (pageNumber != currentPage && pageNumber >= 1 && pageNumber <= pages) {
-            window.location = baseRouteUrl.replace("0", pageNumber);
-        }
-
-        event.preventDefault();
-        return false;
-    }
-});
-</script>
