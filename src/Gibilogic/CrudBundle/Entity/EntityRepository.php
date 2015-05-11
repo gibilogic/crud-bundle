@@ -81,7 +81,7 @@ class EntityRepository extends BaseRepository
      * @param array $options
      * @return \Doctrine\ORM\QueryBuilder
      */
-    protected function getQueryBuilder($options)
+    protected function getQueryBuilder($options = array())
     {
         $queryBuilder = $this->getBaseQueryBuilder();
 
