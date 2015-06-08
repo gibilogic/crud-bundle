@@ -41,22 +41,24 @@ abstract class CrudController extends Controller
      * Index action.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param array $filters
      * @return array
      */
-    public function executeIndexAction(Request $request)
+    public function executeIndexAction(Request $request, $filters = array())
     {
-        return $this->getEntityService()->getEntities($request, $this->getRoutePrefix());
+        return $this->getEntityService()->getEntities($request, $this->getRoutePrefix(), false, $filters);
     }
 
     /**
      * Paginated index action.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param array $filters
      * @return array
      */
-    public function executeIndexPaginatedAction(Request $request)
+    public function executeIndexPaginatedAction(Request $request, $filters = array())
     {
-        return $this->getEntityService()->getEntities($request, $this->getRoutePrefix(), true);
+        return $this->getEntityService()->getEntities($request, $this->getRoutePrefix(), true, $filters);
     }
 
     /**
