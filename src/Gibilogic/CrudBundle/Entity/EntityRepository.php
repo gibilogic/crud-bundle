@@ -15,16 +15,15 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 
 /**
  * EntityRepository class.
- * 
+ *
  * @see \Doctrine\ORM\EntityRepository
  */
 class EntityRepository extends BaseRepository
 {
-
     /**
      * Returns all the entities.
      *
-     * @params array $options
+     * @param array $options
      * @return array
      */
     public function getEntities($options = array())
@@ -35,13 +34,21 @@ class EntityRepository extends BaseRepository
     /**
      * Returns a paginated list of entities.
      *
-     * @params array $options
+     * @param array $options
      * @return \Doctrine\ORM\Tools\Pagination\Paginator
      */
     public function getPaginatedEntities($options = array())
     {
+        if (!isset($options['page'])) {
+            throw new \InvalidArgumentException("The page number is missing.", 500);
+        }
+
+        if (!isset($options['elementsPerPage'])) {
+            throw new \InvalidArgumentException("The number of elements per page is missing.", 500);
+        }
+
         return new Paginator($this->addPagination(
-                $this->getQueryBuilder($options), $options['elementsPerPage'], $options['page']
+            $this->getQueryBuilder($options), $options['elementsPerPage'], $options['page']
         ));
     }
 
@@ -91,6 +98,8 @@ class EntityRepository extends BaseRepository
 
         if (!empty($options['sorting'])) {
             $this->addSorting($queryBuilder, $options['sorting']);
+        } else {
+            $this->addDefaultSorting($queryBuilder);
         }
 
         return $queryBuilder;
@@ -98,7 +107,7 @@ class EntityRepository extends BaseRepository
 
     /**
      * Adds filters to the QueryBuilder instance.
-     * 
+     *
      * @param \Doctrine\ORM\QueryBuilder $queryBuilder
      * @param array $filters
      * @return \Doctrine\ORM\QueryBuilder
@@ -125,7 +134,7 @@ class EntityRepository extends BaseRepository
 
     /**
      * Adds sorting to the QueryBuilder instance.
-     * 
+     *
      * @param \Doctrine\ORM\QueryBuilder $queryBuilder
      * @param array $options
      * @return \Doctrine\ORM\QueryBuilder
@@ -133,14 +142,23 @@ class EntityRepository extends BaseRepository
     protected function addSorting(QueryBuilder $queryBuilder, $options)
     {
         $sanitizedSortField = $this->sanitizeSortField($options);
-        $sanitizedSordOrder = $this->sanitizeSortOrder($options);
-
-        if (!empty($sanitizedSortField)) {
-            return $queryBuilder->orderBy(
-                    $this->addEntityAlias($sanitizedSortField), $sanitizedSordOrder
-            );
+        if (empty($sanitizedSortField)) {
+            return $queryBuilder;
         }
 
+        return $queryBuilder->orderBy(
+            $this->addEntityAlias($sanitizedSortField), $this->sanitizeSortOrder($options)
+        );
+    }
+
+    /**
+     * Adds the default sorting to the QueryBuilder instance.
+     *
+     * @param \Doctrine\ORM\QueryBuilder $queryBuilder
+     * @return \Doctrine\ORM\QueryBuilder
+     */
+    protected function addDefaultSorting(QueryBuilder $queryBuilder)
+    {
         foreach ($this->getDefaultSorting() as $field => $sortOrder) {
             $queryBuilder->addOrderBy(
                 $this->addEntityAlias($field), $sortOrder
@@ -170,13 +188,13 @@ class EntityRepository extends BaseRepository
         }
 
         return $queryBuilder
-                ->setMaxResults($elementsPerPage)
-                ->setFirstResult($elementsPerPage * ((int) $page - 1));
+            ->setMaxResults($elementsPerPage)
+            ->setFirstResult($elementsPerPage * ((int)$page - 1));
     }
 
     /**
      * Sanitizes the sorting field.
-     * 
+     *
      * @param array $options
      * @return string|null
      */
@@ -196,7 +214,7 @@ class EntityRepository extends BaseRepository
 
     /**
      * Sanitizes the sorting order.
-     * 
+     *
      * @param array $options
      * @return string
      */
