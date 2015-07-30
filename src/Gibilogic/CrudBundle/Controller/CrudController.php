@@ -214,7 +214,7 @@ abstract class CrudController extends Controller
      */
     protected function getEntitySavedMessage($entity)
     {
-        return sprintf("The entity with ID '%d' has been saved.", $entity->getId());
+        return sprintf("The entity with ID '%s' has been saved.", $entity->getId());
     }
 
     /**
@@ -225,7 +225,7 @@ abstract class CrudController extends Controller
      */
     protected function getEntityDeletedMessage($entity)
     {
-        return sprintf("The entity with ID '%d' has been deleted.", $entity->getId());
+        return sprintf("The entity with ID '%s' has been deleted.", $entity->getId());
     }
 
     /**
@@ -246,7 +246,7 @@ abstract class CrudController extends Controller
      */
     protected function getDeleteErrorMessage($id)
     {
-        return sprintf("Unable to delete the entity with ID '%d'.", $id);
+        return sprintf("Unable to delete the entity with ID '%s'.", $id);
     }
 
     /**
@@ -257,6 +257,6 @@ abstract class CrudController extends Controller
      */
     protected function getNotFoundErrorMessage($id)
     {
-        return sprintf("The entity with ID '%d' does not exist.", $id);
+        return sprintf("The entity with ID '%s' does not exist.", $id);
     }
 }
