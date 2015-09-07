@@ -7,9 +7,9 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Matteo Guindani",
-            "homepage": "https://github.com/Ingannatore",
-            "email": "m.guindani@gibilogic.com"
+            "name":     "GiBilogic Snc",
+            "homepage": "http://www.gibilogic.com",
+            "email":    "info@gibilogic.com"
         }
     ],
     "require": {
