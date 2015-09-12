@@ -19,6 +19,6 @@
         "doctrine/doctrine-bundle": ">=1.2"
     },
     "autoload": {
-        "psr-0": { "Gibilogic\\CrudBundle\\": "src/" }
+        "psr-4": { "Gibilogic\\CrudBundle\\": "src/" }
     }
 }
