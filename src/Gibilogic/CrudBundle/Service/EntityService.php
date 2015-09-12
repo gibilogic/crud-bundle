@@ -135,6 +135,7 @@ abstract class EntityService
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param mixed $entity
      * @param mixed $form
+     * @return boolean
      */
     public function updateEntity(Request $request, $entity, $form)
     {
@@ -190,7 +191,7 @@ abstract class EntityService
      * Creates a form to delete an entity by id.
      *
      * @param integer $id
-     * @return Symfony\Component\Form\Form
+     * @return \Symfony\Component\Form\Form
      */
     public function createDeleteForm($id)
     {
@@ -286,6 +287,7 @@ abstract class EntityService
      * Returns the current sorting options for the entity.
      * 
      * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param string $prefix
      * @return array
      */
     public function getSorting(Request $request, $prefix)
