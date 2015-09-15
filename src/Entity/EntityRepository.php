@@ -96,7 +96,7 @@ class EntityRepository extends BaseRepository
             $this->addFilters($queryBuilder, $options['filters']);
         }
 
-        if (!empty($options['sorting'])) {
+        if (!empty($options['sorting']) && !empty($options['sorting']['field']) && !empty($options['sorting']['order'])) {
             $this->addSorting($queryBuilder, $options['sorting']);
         } else {
             $this->addDefaultSorting($queryBuilder);
