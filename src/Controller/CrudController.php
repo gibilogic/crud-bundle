@@ -30,12 +30,12 @@ abstract class CrudController extends Controller
     abstract protected function getRoutePrefix();
 
     /**
-     * Returns the controller's base route prefix.
+     * Returns the entity's manager.
      *
      * @abstract
-     * @return \Gibilogic\CrudBundle\Service\EntityService
+     * @return \Gibilogic\CrudBundle\Entity\EntityManager
      */
-    abstract protected function getEntityService();
+    abstract protected function getEntityManager();
 
     /**
      * Index action.
@@ -46,7 +46,7 @@ abstract class CrudController extends Controller
      */
     public function executeIndexAction(Request $request, $filters = array())
     {
-        return $this->getEntityService()->getEntities($request, $this->getRoutePrefix(), false, $filters);
+        return $this->getEntityManager()->getEntities($request, $this->getRoutePrefix(), false, $filters);
     }
 
     /**
@@ -58,7 +58,7 @@ abstract class CrudController extends Controller
      */
     public function executeIndexPaginatedAction(Request $request, $filters = array())
     {
-        return $this->getEntityService()->getEntities($request, $this->getRoutePrefix(), true, $filters);
+        return $this->getEntityManager()->getEntities($request, $this->getRoutePrefix(), true, $filters);
     }
 
     /**
@@ -69,17 +69,17 @@ abstract class CrudController extends Controller
      */
     public function executeShowAction($id)
     {
-        $entityService = $this->getEntityService();
+        $entityManager = $this->getEntityManager();
 
         try {
-            $entity = $entityService->getEntity($id);
+            $entity = $entityManager->getEntity($id);
         } catch (\Exception $ex) {
             return $this->redirectOnNotFound($id);
         }
 
         return array(
             'entity' => $entity,
-            'deleteForm' => $entityService->createDeleteForm($id)->createView()
+            'deleteForm' => $entityManager->createDeleteForm($id)->createView()
         );
     }
 
@@ -90,12 +90,12 @@ abstract class CrudController extends Controller
      */
     public function executeNewAction()
     {
-        $entityService = $this->getEntityService();
-        $entity = $entityService->getNewEntity();
+        $entityManager = $this->getEntityManager();
+        $entity = $entityManager->getNewEntity();
 
         return array(
             'entity' => $entity,
-            'form' => $entityService->createEntityForm($entity, array('method' => 'POST'))->createView(),
+            'form' => $entityManager->createEntityForm($entity, array('method' => 'POST'))->createView(),
         );
     }
 
@@ -107,12 +107,12 @@ abstract class CrudController extends Controller
      */
     public function executeCreateAction(Request $request)
     {
-        $entityService = $this->getEntityService();
+        $entityManager = $this->getEntityManager();
 
-        $entity = $entityService->getNewEntity();
-        $form = $entityService->createEntityForm($entity, array('method' => 'POST'));
+        $entity = $entityManager->getNewEntity();
+        $form = $entityManager->createEntityForm($entity, array('method' => 'POST'));
 
-        if (!$entityService->createEntity($request, $entity, $form)) {
+        if (!$entityManager->createEntity($request, $entity, $form)) {
             $this->addErrorFlash($this->get('session'), $this->getFormErrorMessage());
             return array(
                 'entity' => $entity,
@@ -132,17 +132,17 @@ abstract class CrudController extends Controller
      */
     public function executeEditAction($id)
     {
-        $entityService = $this->getEntityService();
+        $entityManager = $this->getEntityManager();
 
-        $entity = $entityService->getEntity($id);
+        $entity = $entityManager->getEntity($id);
         if ($entity === null) {
             return $this->redirectOnNotFound($id);
         }
 
         return array(
             'entity' => $entity,
-            'form' => $entityService->createEntityForm($entity, array('method' => 'PUT'))->createView(),
-            'deleteForm' => $entityService->createDeleteForm($id)->createView()
+            'form' => $entityManager->createEntityForm($entity, array('method' => 'PUT'))->createView(),
+            'deleteForm' => $entityManager->createDeleteForm($id)->createView()
         );
     }
 
@@ -155,20 +155,20 @@ abstract class CrudController extends Controller
      */
     public function executeUpdateAction(Request $request, $id)
     {
-        $entityService = $this->getEntityService();
+        $entityManager = $this->getEntityManager();
 
-        $entity = $entityService->getEntity($id);
+        $entity = $entityManager->getEntity($id);
         if ($entity === null) {
             return $this->redirectOnNotFound($id);
         }
 
-        $form = $entityService->createEntityForm($entity, array('method' => 'PUT'));
-        if (!$entityService->updateEntity($request, $entity, $form)) {
+        $form = $entityManager->createEntityForm($entity, array('method' => 'PUT'));
+        if (!$entityManager->updateEntity($request, $entity, $form)) {
             $this->addErrorFlash($this->get('session'), $this->getFormErrorMessage());
             return array(
                 'entity' => $entity,
                 'form' => $form->createView(),
-                'deleteForm' => $entityService->createDeleteForm($id)->createView()
+                'deleteForm' => $entityManager->createDeleteForm($id)->createView()
             );
         }
 
@@ -184,7 +184,7 @@ abstract class CrudController extends Controller
      */
     public function executeDeleteAction($id)
     {
-        $entity = $this->getEntityService()->removeEntity($id);
+        $entity = $this->getEntityManager()->removeEntity($id);
         if ($entity === false) {
             $this->addErrorFlash($this->get('session'), $this->getDeleteErrorMessage($id));
             return $this->redirect($this->generateUrl($this->getRoutePrefix() . '_show', array('id' => $id)));

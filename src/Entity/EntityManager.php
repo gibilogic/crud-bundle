@@ -2,23 +2,23 @@
 
 /**
  * @package     Gibilogic\CrudBundle
- * @subpackage  Service
+ * @subpackage  Entity
  * @author      GiBiLogic <info@gibilogic.com>
  * @authorUrl   http://www.gibilogic.com
  */
 
-namespace Gibilogic\CrudBundle\Service;
+namespace Gibilogic\CrudBundle\Entity;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\ORM\NoResultException;
 
 /**
- * EntityService class.
- * 
+ * EntityManager class.
+ *
  * @abstract
  */
-abstract class EntityService
+abstract class EntityManager
 {
     /**
      * @var \Symfony\Component\DependencyInjection\ContainerInterface
@@ -44,7 +44,7 @@ abstract class EntityService
 
     /**
      * Returns the entity repository.
-     * 
+     *
      * @return \Gibilogic\CrudBundle\Entity\EntityRepository
      */
     public function getRepository()
@@ -54,7 +54,7 @@ abstract class EntityService
 
     /**
      * Returns an instance of the entity.
-     * 
+     *
      * @param integer $id
      * @return mixed
      * @throws \Doctrine\ORM\NoResultException
@@ -183,7 +183,7 @@ abstract class EntityService
     public function createEntityForm($entity = null, $options = array())
     {
         return $this->container->get('form.factory')->create(
-                $this->getNewEntityType(), empty($entity) ? $this->getNewEntity() : $entity, $options
+            $this->getNewEntityType(), empty($entity) ? $this->getNewEntity() : $entity, $options
         );
     }
 
@@ -196,14 +196,14 @@ abstract class EntityService
     public function createDeleteForm($id)
     {
         return $this->container->get('form.factory')->createBuilder('form', array('id' => $id), array('csrf_protection' => false))
-                ->add('id', 'hidden')
-                ->setMethod('DELETE')
-                ->getForm();
+            ->add('id', 'hidden')
+            ->setMethod('DELETE')
+            ->getForm();
     }
 
     /**
      * Returns the current filters for the entity, if any.
-     * 
+     *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param string $prefix
      * @param array $overrideFilters
@@ -233,7 +233,7 @@ abstract class EntityService
 
     /**
      * Returns the current page number.
-     * 
+     *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @return int
      */
@@ -285,7 +285,7 @@ abstract class EntityService
 
     /**
      * Returns the current sorting options for the entity.
-     * 
+     *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param string $prefix
      * @return array
@@ -363,19 +363,19 @@ abstract class EntityService
      *
      * @return Object
      */
-    abstract protected function getEntityName();
+    abstract public function getEntityName();
 
     /**
      * Returns a new instance of the managed entity.
      *
      * @return Object
      */
-    abstract protected function getNewEntity();
+    abstract public function getNewEntity();
 
     /**
      * Returns a new form instance of the managed entity.
      *
      * @return \Symfony\Component\Form\AbstractType
      */
-    abstract protected function getNewEntityType();
+    abstract public function getNewEntityType();
 }
