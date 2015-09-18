@@ -10,6 +10,7 @@
 namespace Gibilogic\CrudBundle\Entity;
 
 use Doctrine\ORM\EntityRepository as BaseRepository;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 
@@ -21,14 +22,30 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 class EntityRepository extends BaseRepository
 {
     /**
+     * @param mixed $id
+     * @param integer $hydrationMode
+     * @return mixed
+     *
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getEntity($id, $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
+    {
+        return $this->getQueryBuilder(array('id' => $id))->getQuery()->getOneOrNullResult($hydrationMode);
+    }
+
+    /**
      * Returns all the entities.
      *
      * @param array $options
+     * @param integer $hydrationMode
      * @return array
      */
-    public function getEntities($options = array())
+    public function getEntities($options = array(), $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
-        return $this->getQueryBuilder($options)->getQuery()->execute();
+        $filters = isset($options['filters']) ? $options['filters'] : null;
+        $sorting = isset($options['sorting']) ? $options['sorting'] : null;
+
+        return $this->getQueryBuilder($filters, $sorting)->getQuery()->execute(null, $hydrationMode);
     }
 
     /**
@@ -36,20 +53,36 @@ class EntityRepository extends BaseRepository
      *
      * @param array $options
      * @return \Doctrine\ORM\Tools\Pagination\Paginator
+     *
+     * @throws \InvalidArgumentException
      */
     public function getPaginatedEntities($options = array())
     {
+        if (!isset($options['elementsPerPage'])) {
+            throw new \InvalidArgumentException('You must specify the number of elements per page.', 500);
+        }
         if (!isset($options['page'])) {
-            throw new \InvalidArgumentException("The page number is missing.", 500);
+            throw new \InvalidArgumentException('You must specify the page number.', 500);
         }
 
-        if (!isset($options['elementsPerPage'])) {
-            throw new \InvalidArgumentException("The number of elements per page is missing.", 500);
-        }
+        $filters = isset($options['filters']) ? $options['filters'] : null;
+        $sorting = isset($options['sorting']) ? $options['sorting'] : null;
 
         return new Paginator($this->addPagination(
-            $this->getQueryBuilder($options), $options['elementsPerPage'], $options['page']
+            $this->getQueryBuilder($filters, $sorting),
+            $options['elementsPerPage'],
+            $options['page']
         ));
+    }
+
+    /**
+     * Returns a list of sortable fields.
+     *
+     * @return array
+     */
+    protected function getSortableFields()
+    {
+        return array('id' => true);
     }
 
     /**
@@ -60,16 +93,6 @@ class EntityRepository extends BaseRepository
     protected function getDefaultSorting()
     {
         return array('id' => 'asc');
-    }
-
-    /**
-     * Returns a list of sortable fields.
-     *
-     * @return array
-     */
-    protected function getSortableFields()
-    {
-        return array('id');
     }
 
     /**
@@ -85,21 +108,15 @@ class EntityRepository extends BaseRepository
     /**
      * Returns a complete QueryBuilder instance for the current entity.
      *
-     * @param array $options
+     * @param array $filters
+     * @param array $sorting
      * @return \Doctrine\ORM\QueryBuilder
      */
-    protected function getQueryBuilder($options = array())
+    protected function getQueryBuilder($filters = array(), $sorting = array())
     {
-        $queryBuilder = $this->getBaseQueryBuilder();
-
-        if (!empty($options['filters'])) {
-            $this->addFilters($queryBuilder, $options['filters']);
-        }
-
-        if (!empty($options['sorting']) && !empty($options['sorting']['field']) && !empty($options['sorting']['order'])) {
-            $this->addSorting($queryBuilder, $options['sorting']);
-        } else {
-            $this->addDefaultSorting($queryBuilder);
+        $queryBuilder = $this->addSorting($this->getBaseQueryBuilder(), $sorting);
+        if (!empty($filters)) {
+            $this->addFilters($queryBuilder, $filters);
         }
 
         return $queryBuilder;
@@ -133,58 +150,49 @@ class EntityRepository extends BaseRepository
     }
 
     /**
-     * Adds sorting to the QueryBuilder instance.
+     * Adds sorting to the specified query builder.
      *
      * @param \Doctrine\ORM\QueryBuilder $queryBuilder
-     * @param array $options
+     * @param array $sorting
      * @return \Doctrine\ORM\QueryBuilder
      */
-    protected function addSorting(QueryBuilder $queryBuilder, $options)
+    protected function addSorting(QueryBuilder $queryBuilder, $sorting = array())
     {
-        $sanitizedSortField = $this->sanitizeSortField($options);
-        if (empty($sanitizedSortField)) {
-            return $queryBuilder;
+        if (empty($sorting)) {
+            $sorting = $this->getDefaultSorting();
         }
 
-        return $queryBuilder->orderBy(
-            $this->addEntityAlias($sanitizedSortField), $this->sanitizeSortOrder($options)
-        );
+        foreach ($sorting as $field => $sortOrder) {
+            if (!$this->isFieldValid($field)) {
+                // Skip: invalid field
+                continue;
+            }
+            if (!$this->isSortOrderValid($sortOrder)) {
+                // Skip: invalid sort order
+                continue;
+            }
+
+            return $queryBuilder->addOrderBy($this->addEntityAlias($field), strtolower($sortOrder));
+        }
     }
 
     /**
-     * Adds the default sorting to the QueryBuilder instance.
-     *
-     * @param \Doctrine\ORM\QueryBuilder $queryBuilder
-     * @return \Doctrine\ORM\QueryBuilder
-     */
-    protected function addDefaultSorting(QueryBuilder $queryBuilder)
-    {
-        foreach ($this->getDefaultSorting() as $field => $sortOrder) {
-            $queryBuilder->addOrderBy(
-                $this->addEntityAlias($field), $sortOrder
-            );
-        }
-
-        return $queryBuilder;
-    }
-
-    /**
-     * Adds pagination to the QueryBuilder instance.
+     * Adds pagination to the specified query builder.
      *
      * @param \Doctrine\ORM\QueryBuilder $queryBuilder
      * @param integer $elementsPerPage
      * @param integer $page
      * @return \Doctrine\ORM\QueryBuilder
+     *
      * @throws \InvalidArgumentException
      */
     protected function addPagination(QueryBuilder $queryBuilder, $elementsPerPage, $page = 1)
     {
-        if (!is_numeric($page)) {
-            throw new \InvalidArgumentException(sprintf("The page number must be an integer number, '%s' given.", gettype($page)), 500);
-        }
-
         if (!is_numeric($elementsPerPage)) {
             throw new \InvalidArgumentException(sprintf("The number of elements per page must be an integer number, '%s' given.", gettype($elementsPerPage)), 500);
+        }
+        if (!is_numeric($page)) {
+            throw new \InvalidArgumentException(sprintf("The page number must be an integer number, '%s' given.", gettype($page)), 500);
         }
 
         return $queryBuilder
@@ -193,43 +201,25 @@ class EntityRepository extends BaseRepository
     }
 
     /**
-     * Sanitizes the sorting field.
+     * Returns TRUE if the field is sortable, FALSE otherwise.
      *
-     * @param array $options
-     * @return string|null
+     * @param string $field
+     * @return boolean
      */
-    private function sanitizeSortField($options)
+    private function isFieldValid($field)
     {
-        $field = !empty($options['field']) ? $options['field'] : null;
-        if (empty($field)) {
-            return null;
-        }
-
-        if (!in_array($field, $this->getSortableFields())) {
-            return null;
-        }
-
-        return $field;
+        return array_key_exists($field, $this->getSortableFields());
     }
 
     /**
-     * Sanitizes the sorting order.
+     * Returns TRUE if the sort order is valid, FALSE otherwise.
      *
-     * @param array $options
-     * @return string
+     * @param string $sortOrder
+     * @return boolean
      */
-    private function sanitizeSortOrder($options)
+    private function isSortOrderValid($sortOrder)
     {
-        $order = !empty($options['order']) ? strtolower($options['order']) : null;
-        if (empty($order)) {
-            return 'asc';
-        }
-
-        if ($order != 'asc' && $order != 'desc') {
-            return 'asc';
-        }
-
-        return $order;
+        return in_array(strtolower($sortOrder), array('asc', 'desc'));
     }
 
     /**
@@ -240,10 +230,6 @@ class EntityRepository extends BaseRepository
      */
     private function addEntityAlias($field)
     {
-        if (strpos($field, '.') !== false) {
-            return $field;
-        }
-
-        return sprintf('e.%s', $field);
+        return strpos($field, '.') !== false ? $field : sprintf('e.%s', $field);
     }
 }
