@@ -10,13 +10,11 @@
 namespace Gibilogic\CrudBundle\Entity;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Doctrine\ORM\NoResultException;
 
 /**
  * EntityManager class.
- *
- * @abstract
  */
 abstract class EntityManager
 {
@@ -31,6 +29,34 @@ abstract class EntityManager
     protected $elementsPerPage;
 
     /**
+     * Returns the Symfony-styled entity name.
+     *
+     * @return string
+     */
+    abstract public function getEntityName();
+
+    /**
+     * Returns the entity's session prefix.
+     *
+     * @return string
+     */
+    abstract public function getEntityPrefix();
+
+    /**
+     * Returns a new instance of the managed entity.
+     *
+     * @return Object
+     */
+    abstract public function getNewEntity();
+
+    /**
+     * Returns a new form instance for the managed entity.
+     *
+     * @return \Symfony\Component\Form\AbstractType
+     */
+    abstract public function getNewEntityType();
+
+    /**
      * Constructor.
      *
      * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
@@ -43,49 +69,32 @@ abstract class EntityManager
     }
 
     /**
-     * Returns the entity repository.
-     *
-     * @return \Gibilogic\CrudBundle\Entity\EntityRepository
-     */
-    public function getRepository()
-    {
-        return $this->container->get('doctrine')->getRepository($this->getEntityName());
-    }
-
-    /**
      * Returns an instance of the entity.
      *
      * @param integer $id
      * @return mixed
-     * @throws \Doctrine\ORM\NoResultException
      */
-    public function getEntity($id)
+    public function findEntity($id)
     {
-        $entity = $this->getRepository()->find($id);
-        if ($entity === null) {
-            throw new NoResultException(sprintf("Unable to find a '%s' entity with ID '%d'.", $this->getEntityName(), $id));
-        }
-
-        return $entity;
+        return $this->getRepository()->find($id);
     }
 
     /**
-     * Returns a list of entities.
+     * Returns a (optionally paginated) list of entities.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param string $routePrefix
-     * @param boolean $isPaginated
+     * @param bool $addPagination
      * @param array $filters
      * @return array
      */
-    public function getEntities(Request $request, $routePrefix, $isPaginated = false, $filters = array())
+    public function findEntities(Request $request, $addPagination = false, $filters = array())
     {
         $options = array(
-            'filters' => $this->getFilters($request, $routePrefix, $filters),
-            'sorting' => $this->getSorting($request, $routePrefix)
+            'filters' => $this->getFilters($request, $filters),
+            'sorting' => $this->getSorting($request)
         );
 
-        if (!$isPaginated) {
+        if (!$addPagination) {
             return array(
                 'entities' => $this->getRepository()->getEntities($options),
                 'options' => $options
@@ -104,23 +113,19 @@ abstract class EntityManager
     }
 
     /**
-     * Persists and creates a new entity.
+     * Saves the entity.
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param mixed $entity
-     * @param mixed $form
-     * @return boolean
+     * @param object $entity
+     * @return bool
      */
-    public function createEntity(Request $request, $entity, $form)
+    public function saveEntity($entity)
     {
-        $form->handleRequest($request);
-        if (!$form->isValid()) {
-            return false;
-        }
-
-        $em = $this->container->get('doctrine')->getManager();
+        $em = $this->getDoctrine()->getManager();
         try {
-            $em->persist($entity);
+            if (!$em->contains($entity)) {
+                $em->persist($entity);
+            }
+
             $em->flush();
         } catch (\Exception $ex) {
             return false;
@@ -130,40 +135,15 @@ abstract class EntityManager
     }
 
     /**
-     * Updates an existing entity.
+     * Removes the entity.
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param mixed $entity
-     * @param mixed $form
-     * @return boolean
+     * @param object $entity
+     * @return bool
      */
-    public function updateEntity(Request $request, $entity, $form)
+    public function removeEntity($entity)
     {
-        $form->handleRequest($request);
-        if (!$form->isValid()) {
-            return false;
-        }
-
+        $em = $this->getDoctrine()->getManager();
         try {
-            $this->container->get('doctrine')->getManager()->flush();
-        } catch (\Exception $ex) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Removes the specified entity.
-     *
-     * @param integer $id
-     * @return boolean
-     */
-    public function removeEntity($id)
-    {
-        $em = $this->container->get('doctrine')->getManager();
-        try {
-            $entity = $this->getEntity($id);
             $em->remove($entity);
             $em->flush();
         } catch (\Exception $ex) {
@@ -174,7 +154,7 @@ abstract class EntityManager
     }
 
     /**
-     * Returns a form to create/edit an entity.
+     * Returns an instance of the entity form.
      *
      * @param mixed $entity
      * @param array $options
@@ -183,199 +163,240 @@ abstract class EntityManager
     public function createEntityForm($entity = null, $options = array())
     {
         return $this->container->get('form.factory')->create(
-            $this->getNewEntityType(), empty($entity) ? $this->getNewEntity() : $entity, $options
+            $this->getNewEntityType(),
+            $entity ?: $this->getNewEntity(),
+            $options
         );
-    }
-
-    /**
-     * Creates a form to delete an entity by id.
-     *
-     * @param integer $id
-     * @return \Symfony\Component\Form\Form
-     */
-    public function createDeleteForm($id)
-    {
-        return $this->container->get('form.factory')->createBuilder('form', array('id' => $id), array('csrf_protection' => false))
-            ->add('id', 'hidden')
-            ->setMethod('DELETE')
-            ->getForm();
     }
 
     /**
      * Returns the current filters for the entity, if any.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param string $prefix
      * @param array $overrideFilters
      * @return array
      */
-    public function getFilters(Request $request, $prefix, $overrideFilters = array())
+    public function getFilters(Request $request, $overrideFilters = array())
     {
-        $prefix .= '_filter_';
-        $filters = array();
-
-        // Extracts filters from session
-        foreach ($request->getSession()->all() as $key => $value) {
-            if (strpos($key, $prefix) === 0) {
-                $filters[str_replace($prefix, '', $key)] = $value;
-            }
-        }
-
-        // Extract filters from POST request
-        foreach ($request->request->all() as $key => $value) {
-            if (strpos($key, $prefix) === 0) {
-                $filters[str_replace($prefix, '', $key)] = $value;
-            }
-        }
-
-        return empty($overrideFilters) ? $filters : array_merge($filters, $overrideFilters);
-    }
-
-    /**
-     * Returns the current page number.
-     *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @return int
-     */
-    public function getPage(Request $request)
-    {
-        $page = $request->query->get('page', 1);
-        if (empty($page) || !is_numeric($page) || $page < 1) {
-            $page = 1;
-        }
-
-        return $page;
-    }
-
-    /**
-     * Saves the current filters for the entity, if any.
-     *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param string $prefix
-     */
-    public function saveFilters(Request $request, $prefix)
-    {
-        $prefix .= '_filter_';
-        $session = $request->getSession();
-
-        foreach ($request->request->all() as $key => $value) {
-            if (strpos($key, $prefix) === 0) {
-                $session->set($key, $value);
-            }
-        }
-    }
-
-    /**
-     * Resets all the filters for the entity, if any.
-     *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param string $prefix
-     */
-    public function resetFilters(Request $request, $prefix)
-    {
-        $prefix .= '_filter_';
-        $session = $request->getSession();
-
-        foreach ($request->getSession()->all() as $key => $value) {
-            if (strpos($key, $prefix) === 0) {
-                $session->remove($key);
-            }
-        }
+        return array_replace(
+            $this->getFiltersFromSession($request->getSession()),
+            $this->getFiltersFromRequest($request),
+            $overrideFilters
+        );
     }
 
     /**
      * Returns the current sorting options for the entity.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param string $prefix
      * @return array
      */
-    public function getSorting(Request $request, $prefix)
+    public function getSorting(Request $request)
     {
-        return array(
-            'field' => $this->getSortField($request, $prefix),
-            'order' => $this->getSortOrder($request, $prefix)
+        return array_replace(
+            $this->getSortingFromSession($request->getSession()),
+            $this->getSortingFromRequest($request)
         );
     }
 
     /**
-     * Returns the current sort field for the entity.
+     * Saves the filters inside the session.
+     *
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+     * @param array $filters
+     */
+    protected function saveFilters(SessionInterface $session, array $filters)
+    {
+        $this->saveValues($filters, $this->getFilterPrefix(), $session);
+    }
+
+    /**
+     * Saves the sorting options (sort field and sort order) inside the session.
+     *
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+     * @param array $sorting
+     */
+    protected function saveSorting(SessionInterface $session, array $sorting)
+    {
+        $this->saveValues($sorting, $this->getSortingPrefix(), $session);
+    }
+
+    /**
+     * Removes all the filters from the session.
+     *
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+     */
+    protected function removeFiltersFromSession(SessionInterface $session)
+    {
+        $this->removeValues($this->getFilterPrefix(), $session);
+    }
+
+    /**
+     * Removes the sorting options from the session.
+     *
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+     */
+    protected function removeSortingFromSession(SessionInterface $session)
+    {
+        $this->removeValues($this->getSortingPrefix(), $session);
+    }
+
+    /**
+     * Returns the filters from the request.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param string $prefix
-     * @return string|null
+     * @return array
      */
-    protected function getSortField(Request $request, $prefix)
+    protected function getFiltersFromRequest(Request $request)
     {
-        $sortField = $request->query->get('sort', null);
-        if (!empty($sortField)) {
-            $request->getSession()->set($prefix . '_sort_field', $sortField);
-            return $sortField;
-        }
-
-        return $request->getSession()->get($prefix . '_sort_field', null);
+        return $this->extractValues($request->request->all(), $this->getFilterPrefix());
     }
 
     /**
-     * Returns the current sort order for the entity.
+     * Returns the filters from the session.
+     *
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+     * @return array
+     */
+    protected function getFiltersFromSession(SessionInterface $session)
+    {
+        return $this->extractValues($session->all(), $this->getFilterPrefix());
+    }
+
+    /**
+     * Returns the sorting options from the request.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return array
+     */
+    protected function getSortingFromRequest(Request $request)
+    {
+        return $this->extractValues($request->request->all(), $this->getSortingPrefix());
+    }
+
+    /**
+     * Returns the sorting options from the session.
+     *
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+     * @return array
+     */
+    protected function getSortingFromSession(SessionInterface $session)
+    {
+        return $this->extractValues($session->all(), $this->getSortingPrefix());
+    }
+
+    /**
+     * Returns the entity repository.
+     *
+     * @return \Gibilogic\CrudBundle\Entity\EntityRepository
+     */
+    protected function getRepository()
+    {
+        return $this->getDoctrine()->getRepository($this->getEntityName());
+    }
+
+    /**
+     * Shortcut to return the Doctrine Registry service.
+     *
+     * @return \Doctrine\Bundle\DoctrineBundle\Registry;
+     */
+    protected function getDoctrine()
+    {
+        return $this->container->get('doctrine');
+    }
+
+    /**
+     * Returns all the key-value pairs from the array whose key has the specified prefix.
+     *
+     * @param array $values
      * @param string $prefix
-     * @return string|null
+     * @param bool $removePrefixFromKeys
+     * @return array
      */
-    protected function getSortOrder(Request $request, $prefix)
+    private function extractValues(array $values, $prefix, $removePrefixFromKeys = true)
     {
-        $sortOrder = $request->query->get('order', null);
-        if (!empty($sortOrder)) {
-            $request->getSession()->set($prefix . '_sort_order', $sortOrder);
-            return $sortOrder;
+        if (empty($values)) {
+            return array();
         }
 
-        return $request->getSession()->get($prefix . '_sort_order', null);
+        $validKeys = array_filter(array_keys($values), function ($name) use ($prefix) {
+            return (0 === strpos($name, $prefix));
+        });
+
+        $results = array_intersect_key($values, array_flip($validKeys));
+        if (!$removePrefixFromKeys) {
+            return $results;
+        }
+
+        return array_combine(
+            array_map(function ($key) use ($prefix) {
+                return str_replace($prefix, '', $key);
+            }, array_keys($results)), $results
+        );
     }
 
     /**
-     * Get a user from the Security Token Storage.
+     * Saves into the session all the key-value pairs from the array, adding to their keys the specified prefix.
      *
-     * @return mixed
-     * @throws \LogicException If SecurityBundle is not available
+     * @param array $values
+     * @param string $prefix
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
      */
-    protected function getUser()
+    private function saveValues(array $values, $prefix, SessionInterface $session)
     {
-        if (!$this->container->has('security.token_storage')) {
-            throw new \LogicException('The SecurityBundle is not registered in your application.');
+        foreach ($values as $name => $value) {
+            $session->set($prefix . $name, $value);
         }
-
-        if (null === $token = $this->container->get('security.token_storage')->getToken()) {
-            return;
-        }
-
-        if (!is_object($user = $token->getUser())) {
-            // e.g. anonymous authentication
-            return;
-        }
-
-        return $user;
     }
 
     /**
-     * Returns the Symfony-styled entity name.
+     * Removes from the session all the key-value pairs whose key has the specified prefix.
      *
-     * @return Object
+     * @param string $prefix
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
      */
-    abstract public function getEntityName();
+    private function removeValues($prefix, SessionInterface $session)
+    {
+        foreach ($session->all() as $key => $value) {
+            if (0 === strpos($key, $prefix)) {
+                $session->remove($key);
+            }
+        }
+    }
 
     /**
-     * Returns a new instance of the managed entity.
+     * Returns the current page number.
      *
-     * @return Object
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return integer
      */
-    abstract public function getNewEntity();
+    private function getPage(Request $request)
+    {
+        $page = $request->query->get('page', 1);
+        if (!is_numeric($page) || $page < 1) {
+            $page = 1;
+        }
+
+        return (int)$page;
+    }
 
     /**
-     * Returns a new form instance of the managed entity.
+     * Returns the prefix used for managing the filters.
      *
-     * @return \Symfony\Component\Form\AbstractType
+     * @return string
      */
-    abstract public function getNewEntityType();
+    private function getFilterPrefix()
+    {
+        return sprintf('%s_filter_', $this->getEntityPrefix());
+    }
+
+    /**
+     * Returns the prefix used for managing the sorting options.
+     *
+     * @return string
+     */
+    private function getSortingPrefix()
+    {
+        return sprintf('%s_sorting_', $this->getEntityPrefix());
+    }
 }
