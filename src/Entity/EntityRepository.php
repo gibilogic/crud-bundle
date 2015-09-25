@@ -172,8 +172,10 @@ class EntityRepository extends BaseRepository
                 continue;
             }
 
-            return $queryBuilder->addOrderBy($this->addEntityAlias($field), strtolower($sortOrder));
+            $queryBuilder->addOrderBy($this->addEntityAlias($field), strtolower($sortOrder));
         }
+
+        return $queryBuilder;
     }
 
     /**
