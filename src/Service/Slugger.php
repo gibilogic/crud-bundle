@@ -55,6 +55,6 @@ class Slugger
             $string = str_replace($input, $output, $string);
         }
 
-        return preg_replace('#(' . $separator . '+)#', $separator, preg_replace('#[\s]+#', $separator, rtrim(trim(preg_replace('#[^a-z0-9.\s]#', ' ', mb_strtolower($string, mb_internal_encoding()))))));
+        return preg_replace('#(' . $separator . '+)#', $separator, preg_replace('#[\s]+#', $separator, rtrim(trim(preg_replace('#[^a-z0-9\s]#', ' ', mb_strtolower($string, mb_internal_encoding()))))));
     }
 }
