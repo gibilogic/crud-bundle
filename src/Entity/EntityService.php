@@ -11,17 +11,17 @@ namespace Gibilogic\CrudBundle\Entity;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\ORM\EntityManager;
 
 /**
- * EntityManager class.
+ * EntityService class.
  */
-abstract class EntityManager
+abstract class EntityService
 {
     /**
-     * @var \Symfony\Component\DependencyInjection\ContainerInterface
+     * @var \Doctrine\ORM\EntityManager $entityManager
      */
-    protected $container;
+    protected $entityManager;
 
     /**
      * @var integer $elementsPerPage
@@ -50,21 +50,14 @@ abstract class EntityManager
     abstract public function getNewEntity();
 
     /**
-     * Returns a new form instance for the managed entity.
-     *
-     * @return \Symfony\Component\Form\AbstractType
-     */
-    abstract public function getNewEntityType();
-
-    /**
      * Constructor.
      *
-     * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+     * @param \Doctrine\ORM\EntityManager $entityManager
      * @param integer $elementsPerPage
      */
-    public function __construct(ContainerInterface $container, $elementsPerPage)
+    public function __construct(EntityManager $entityManager, $elementsPerPage)
     {
-        $this->container = $container;
+        $this->entityManager = $entityManager;
         $this->elementsPerPage = $elementsPerPage;
     }
 
@@ -101,14 +94,14 @@ abstract class EntityManager
             );
         }
 
+        $entities = $this->getRepository()->getPaginatedEntities($options);
+        $options['pages'] = ceil($entities->count() / $options['elementsPerPage']);
         $options['page'] = $this->getPage($request);
         $options['elementsPerPage'] = $this->elementsPerPage;
 
-        $entities = $this->getRepository()->getPaginatedEntities($options);
         return array(
             'entities' => $entities,
-            'options' => $options,
-            'pages' => ceil(count($entities) / $options['elementsPerPage'])
+            'options' => $options
         );
     }
 
@@ -120,13 +113,12 @@ abstract class EntityManager
      */
     public function saveEntity($entity)
     {
-        $em = $this->getDoctrine()->getManager();
         try {
-            if (!$em->contains($entity)) {
-                $em->persist($entity);
+            if (!$this->entityManager->contains($entity)) {
+                $this->entityManager->persist($entity);
             }
 
-            $em->flush();
+            $this->entityManager->flush();
         } catch (\Exception $ex) {
             return false;
         }
@@ -142,31 +134,14 @@ abstract class EntityManager
      */
     public function removeEntity($entity)
     {
-        $em = $this->getDoctrine()->getManager();
         try {
-            $em->remove($entity);
-            $em->flush();
+            $this->entityManager->remove($entity);
+            $this->entityManager->flush();
         } catch (\Exception $ex) {
             return false;
         }
 
         return true;
-    }
-
-    /**
-     * Returns an instance of the entity form.
-     *
-     * @param mixed $entity
-     * @param array $options
-     * @return \Symfony\Component\Form\Form
-     */
-    public function createEntityForm($entity = null, $options = array())
-    {
-        return $this->container->get('form.factory')->create(
-            $this->getNewEntityType(),
-            $entity ?: $this->getNewEntity(),
-            $options
-        );
     }
 
     /**
@@ -292,17 +267,7 @@ abstract class EntityManager
      */
     protected function getRepository()
     {
-        return $this->getDoctrine()->getRepository($this->getEntityName());
-    }
-
-    /**
-     * Shortcut to return the Doctrine Registry service.
-     *
-     * @return \Doctrine\Bundle\DoctrineBundle\Registry;
-     */
-    protected function getDoctrine()
-    {
-        return $this->container->get('doctrine');
+        return $this->entityManager->getRepository($this->getEntityName());
     }
 
     /**
