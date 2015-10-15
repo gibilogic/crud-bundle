@@ -140,9 +140,13 @@ class EntityRepository extends BaseRepository
 
             $field = $this->addEntityAlias($field);
             if (is_array($value)) {
+                $value = array_map(function($element) {
+                    return "'$element'";
+                }, $value);
+
                 $queryBuilder->andWhere($queryBuilder->expr()->in($field, implode(',', $value)));
             } else {
-                $queryBuilder->andWhere($queryBuilder->expr()->eq($field, $value));
+                $queryBuilder->andWhere($queryBuilder->expr()->eq($field, "'$value'"));
             }
         }
 
