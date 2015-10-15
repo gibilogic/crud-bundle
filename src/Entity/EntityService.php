@@ -94,10 +94,11 @@ abstract class EntityService
             );
         }
 
-        $entities = $this->getRepository()->getPaginatedEntities($options);
-        $options['pages'] = ceil($entities->count() / $options['elementsPerPage']);
         $options['page'] = $this->getPage($request);
         $options['elementsPerPage'] = $this->elementsPerPage;
+
+        $entities = $this->getRepository()->getPaginatedEntities($options);
+        $options['pages'] = ceil($entities->count() / $options['elementsPerPage']);
 
         return array(
             'entities' => $entities,
