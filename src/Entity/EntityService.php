@@ -121,7 +121,7 @@ abstract class EntityService
      */
     public function findUnhydratedEntities(Request $request, $filters = array(), $addPagination = false)
     {
-        $options = $this->getOptions($request, $filters, $addPagination);
+        $options = $this->getOptions($request, $filters, $addPagination, true);
         if (!$addPagination) {
             return array(
                 'entities' => $this->getRepository()->getEntities($options, AbstractQuery::HYDRATE_ARRAY),
@@ -182,10 +182,18 @@ abstract class EntityService
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param array $overrideFilters
+     * @param bool $ignoreSession
      * @return array
      */
-    public function getFilters(Request $request, $overrideFilters = array())
+    public function getFilters(Request $request, $overrideFilters = array(), $ignoreSession = false)
     {
+        if ($ignoreSession) {
+            return array_replace(
+                $this->getFiltersFromRequest($request),
+                $overrideFilters
+            );
+        }
+
         return array_replace(
             $this->getFiltersFromSession($request->getSession()),
             $this->getFiltersFromRequest($request),
@@ -197,10 +205,15 @@ abstract class EntityService
      * Returns the current sorting options for the entity.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param bool $ignoreSession
      * @return array
      */
-    public function getSorting(Request $request)
+    public function getSorting(Request $request, $ignoreSession = false)
     {
+        if ($ignoreSession) {
+            return $this->getSortingFromRequest($request);
+        }
+
         return array_replace(
             $this->getSortingFromSession($request->getSession()),
             $this->getSortingFromRequest($request)
@@ -307,13 +320,14 @@ abstract class EntityService
      * @param Request $request
      * @param array $filters
      * @param bool $addPagination
+     * @param bool $ignoreSession
      * @return array
      */
-    private function getOptions(Request $request, $filters, $addPagination)
+    private function getOptions(Request $request, $filters, $addPagination, $ignoreSession = false)
     {
         $options = array(
-            'filters' => $this->getFilters($request, $filters),
-            'sorting' => $this->getSorting($request)
+            'filters' => $this->getFilters($request, $filters, $ignoreSession),
+            'sorting' => $this->getSorting($request, $ignoreSession)
         );
 
         if ($addPagination) {
