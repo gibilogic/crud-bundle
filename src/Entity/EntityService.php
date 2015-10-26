@@ -12,6 +12,7 @@ namespace Gibilogic\CrudBundle\Entity;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\AbstractQuery;
 
 /**
  * EntityService class.
@@ -69,24 +70,31 @@ abstract class EntityService
      */
     public function findEntity($id)
     {
-        return $this->getRepository()->find($id);
+        return $this->getRepository()->getEntity($id);
     }
 
     /**
-     * Returns a (optionally paginated) list of entities.
+     * Returns an unhydrated (ie. as associative array) entity.
+     *
+     * @param integer $id
+     * @return mixed
+     */
+    public function findUnhydratedEntity($id)
+    {
+        return $this->getRepository()->getEntity($id, AbstractQuery::HYDRATE_ARRAY);
+    }
+
+    /**
+     * Returns a list of entities.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param bool $addPagination
      * @param array $filters
+     * @param bool $addPagination
      * @return array
      */
-    public function findEntities(Request $request, $addPagination = false, $filters = array())
+    public function findEntities(Request $request, $filters = array(), $addPagination = false)
     {
-        $options = array(
-            'filters' => $this->getFilters($request, $filters),
-            'sorting' => $this->getSorting($request)
-        );
-
+        $options = $this->getOptions($request, $filters, $addPagination);
         if (!$addPagination) {
             return array(
                 'entities' => $this->getRepository()->getEntities($options),
@@ -94,10 +102,34 @@ abstract class EntityService
             );
         }
 
-        $options['page'] = $this->getPage($request);
-        $options['elementsPerPage'] = $this->elementsPerPage;
-
         $entities = $this->getRepository()->getPaginatedEntities($options);
+        $options['pages'] = ceil($entities->count() / $options['elementsPerPage']);
+
+        return array(
+            'entities' => $entities,
+            'options' => $options
+        );
+    }
+
+    /**
+     * Returns an unhydrated (ie. as associative array) list of entities.
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param array $filters
+     * @param bool $addPagination
+     * @return array
+     */
+    public function findUnhydratedEntities(Request $request, $filters = array(), $addPagination = false)
+    {
+        $options = $this->getOptions($request, $filters, $addPagination);
+        if (!$addPagination) {
+            return array(
+                'entities' => $this->getRepository()->getEntities($options, AbstractQuery::HYDRATE_ARRAY),
+                'options' => $options
+            );
+        }
+
+        $entities = $this->getRepository()->getPaginatedEntities($options, AbstractQuery::HYDRATE_ARRAY);
         $options['pages'] = ceil($entities->count() / $options['elementsPerPage']);
 
         return array(
@@ -269,6 +301,27 @@ abstract class EntityService
     protected function getRepository()
     {
         return $this->entityManager->getRepository($this->getEntityName());
+    }
+
+    /**
+     * @param Request $request
+     * @param array $filters
+     * @param bool $addPagination
+     * @return array
+     */
+    private function getOptions(Request $request, $filters, $addPagination)
+    {
+        $options = array(
+            'filters' => $this->getFilters($request, $filters),
+            'sorting' => $this->getSorting($request)
+        );
+
+        if ($addPagination) {
+            $options['page'] = $this->getPage($request);
+            $options['elementsPerPage'] = $this->elementsPerPage;
+        }
+
+        return $options;
     }
 
     /**
