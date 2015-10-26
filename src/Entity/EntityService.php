@@ -270,7 +270,7 @@ abstract class EntityService
      */
     protected function getFiltersFromRequest(Request $request)
     {
-        return $this->extractValues($request->request->all(), $this->getFilterPrefix());
+        return $this->extractValues($this->getValuesFromRequest($request), $this->getFilterPrefix());
     }
 
     /**
@@ -292,7 +292,7 @@ abstract class EntityService
      */
     protected function getSortingFromRequest(Request $request)
     {
-        return $this->extractValues($request->request->all(), $this->getSortingPrefix());
+        return $this->extractValues($this->getValuesFromRequest($request), $this->getSortingPrefix());
     }
 
     /**
@@ -336,6 +336,21 @@ abstract class EntityService
         }
 
         return $options;
+    }
+
+    /**
+     * Returns the values of the options from the request.
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return array
+     */
+    private function getValuesFromRequest(Request $request)
+    {
+        if (empty($request->getContent())) {
+            return $request->request->all();
+        }
+
+        return json_decode($request->getContent(), true);
     }
 
     /**
