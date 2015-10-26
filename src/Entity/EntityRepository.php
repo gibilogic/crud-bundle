@@ -30,11 +30,13 @@ class EntityRepository extends BaseRepository
      */
     public function getEntity($id, $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
-        return $this->getQueryBuilder(array('id' => $id))->getQuery()->getOneOrNullResult($hydrationMode);
+        return $this->getQueryBuilder(array('id' => $id))
+            ->getQuery()
+            ->getOneOrNullResult($hydrationMode);
     }
 
     /**
-     * Returns all the entities.
+     * Returns a list of all the entities.
      *
      * @param array $options
      * @param integer $hydrationMode
@@ -42,21 +44,22 @@ class EntityRepository extends BaseRepository
      */
     public function getEntities($options = array(), $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
-        $filters = isset($options['filters']) ? $options['filters'] : null;
-        $sorting = isset($options['sorting']) ? $options['sorting'] : null;
+        $filters = isset($options['filters']) ? $options['filters'] : array();
+        $sorting = isset($options['sorting']) ? $options['sorting'] : array();
 
-        return $this->getQueryBuilder($filters, $sorting)->getQuery()->execute(null, $hydrationMode);
+        return $this->getQueryBuilder($filters, $sorting)
+            ->getQuery()
+            ->execute(null, $hydrationMode);
     }
 
     /**
      * Returns a paginated list of entities.
      *
      * @param array $options
+     * @param integer $hydrationMode
      * @return \Doctrine\ORM\Tools\Pagination\Paginator
-     *
-     * @throws \InvalidArgumentException
      */
-    public function getPaginatedEntities($options = array())
+    public function getPaginatedEntities($options = array(), $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
         if (!isset($options['elementsPerPage'])) {
             throw new \InvalidArgumentException('You must specify the number of elements per page.', 500);
@@ -65,14 +68,16 @@ class EntityRepository extends BaseRepository
             throw new \InvalidArgumentException('You must specify the page number.', 500);
         }
 
-        $filters = isset($options['filters']) ? $options['filters'] : null;
-        $sorting = isset($options['sorting']) ? $options['sorting'] : null;
+        $filters = isset($options['filters']) ? $options['filters'] : array();
+        $sorting = isset($options['sorting']) ? $options['sorting'] : array();
 
-        return new Paginator($this->addPagination(
+        $queryBuilder = $this->addPagination(
             $this->getQueryBuilder($filters, $sorting),
             $options['elementsPerPage'],
             $options['page']
-        ));
+        );
+
+        return new Paginator($queryBuilder->getQuery()->setHydrationMode($hydrationMode));
     }
 
     /**
@@ -140,7 +145,7 @@ class EntityRepository extends BaseRepository
 
             $field = $this->addEntityAlias($field);
             if (is_array($value)) {
-                $value = array_map(function($element) {
+                $value = array_map(function ($element) {
                     return "'$element'";
                 }, $value);
 
