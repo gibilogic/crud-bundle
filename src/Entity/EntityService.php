@@ -133,7 +133,7 @@ abstract class EntityService
         $options['pages'] = ceil($entities->count() / $options['elementsPerPage']);
 
         return array(
-            'entities' => $entities,
+            'entities' => $entities->getIterator(),
             'options' => $options
         );
     }
