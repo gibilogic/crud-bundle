@@ -22,6 +22,8 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 class EntityRepository extends BaseRepository
 {
     /**
+     * Returns an entity by its ID.
+     *
      * @param mixed $id
      * @param integer $hydrationMode
      * @return mixed
@@ -31,6 +33,20 @@ class EntityRepository extends BaseRepository
     public function getEntity($id, $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
         return $this->getQueryBuilder(array('id' => $id))
+            ->getQuery()
+            ->getOneOrNullResult($hydrationMode);
+    }
+
+    /**
+     * @param array $filters
+     * @param integer $hydrationMode
+     * @return mixed
+     *
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getEntityBy(array $filters, $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
+    {
+        return $this->getQueryBuilder($filters)
             ->getQuery()
             ->getOneOrNullResult($hydrationMode);
     }
