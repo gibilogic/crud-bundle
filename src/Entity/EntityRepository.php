@@ -11,6 +11,7 @@ namespace Gibilogic\CrudBundle\Entity;
 
 use Doctrine\ORM\EntityRepository as BaseRepository;
 use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 
@@ -225,6 +226,25 @@ class EntityRepository extends BaseRepository
         return $queryBuilder
             ->setMaxResults($elementsPerPage)
             ->setFirstResult($elementsPerPage * ((int)$page - 1));
+    }
+
+    /**
+     * Returns TRUE if the join string is already present inside the query builder, FALSE otherwise.
+     *
+     * @param \Doctrine\ORM\QueryBuilder $queryBuilder
+     * @param string $joinString
+     * @return boolean
+     */
+    protected function hasJoin(QueryBuilder $queryBuilder, $joinString)
+    {
+        /* @var \Doctrine\ORM\Query\Expr\Join $joinExpression */
+        foreach ($queryBuilder->getDQLPart('join') as $joinExpression) {
+            if ($joinExpression->getJoin() == $joinString) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
