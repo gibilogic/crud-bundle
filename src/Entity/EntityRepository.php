@@ -238,9 +238,11 @@ class EntityRepository extends BaseRepository
     protected function hasJoin(QueryBuilder $queryBuilder, $joinString)
     {
         /* @var \Doctrine\ORM\Query\Expr\Join $joinExpression */
-        foreach ($queryBuilder->getDQLPart('join') as $joinExpression) {
-            if ($joinExpression->getJoin() == $joinString) {
-                return true;
+        foreach ($queryBuilder->getDQLPart('join') as $joinsList) {
+            foreach ($joinsList as $joinExpression) {
+                if ($joinExpression->getJoin() == $joinString) {
+                    return true;
+                }
             }
         }
 
