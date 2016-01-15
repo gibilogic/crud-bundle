@@ -346,7 +346,7 @@ abstract class EntityService
      */
     private function getValuesFromRequest(Request $request)
     {
-        if (empty($request->getContent())) {
+        if ($request->request->count() > 0) {
             return $request->request->all();
         }
 
