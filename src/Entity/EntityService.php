@@ -194,11 +194,14 @@ abstract class EntityService
             );
         }
 
-        return array_replace(
+        $filters = array_replace(
             $this->getFiltersFromSession($request->getSession()),
             $this->getFiltersFromRequest($request),
             $overrideFilters
         );
+
+        $this->saveFilters($request->getSession(), $filters);
+        return $filters;
     }
 
     /**
@@ -214,10 +217,13 @@ abstract class EntityService
             return $this->getSortingFromRequest($request);
         }
 
-        return array_replace(
+        $sorting = array_replace(
             $this->getSortingFromSession($request->getSession()),
             $this->getSortingFromRequest($request)
         );
+
+        $this->saveSorting($request->getSession(), $sorting);
+        return $sorting;
     }
 
     /**
