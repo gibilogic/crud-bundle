@@ -350,7 +350,8 @@ abstract class EntityService
             return $request->request->all();
         }
 
-        return json_decode($request->getContent(), true);
+        $values = json_decode($request->getContent(), true);
+        return is_array($values) ? $values : array();
     }
 
     /**
