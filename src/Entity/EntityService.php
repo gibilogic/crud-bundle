@@ -227,6 +227,17 @@ abstract class EntityService
     }
 
     /**
+     * Removes filters and sorting options from the session for this entity.
+     *
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+     */
+    public function removeFiltersAndSorting(SessionInterface $session)
+    {
+        $this->removeFiltersFromSession($session);
+        $this->removeSortingFromSession($session);
+    }
+
+    /**
      * Saves the filters inside the session.
      *
      * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
