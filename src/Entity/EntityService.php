@@ -227,6 +227,18 @@ abstract class EntityService
     }
 
     /**
+     * Returns TRUE if the filter exists for this entity, FALSE otherwise.
+     *
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+     * @param string $filterName
+     * @return boolean
+     */
+    public function hasFilter(SessionInterface $session, $filterName)
+    {
+        return $session->has($this->getFilterPrefix() . $filterName);
+    }
+
+    /**
      * Removes filters and sorting options from the session for this entity.
      *
      * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
