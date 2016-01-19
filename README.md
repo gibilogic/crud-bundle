@@ -4,9 +4,9 @@ A Symfony 2 bundle that contains simple CRUD-oriented services and helpers.
 
 This bundle helps creating CRUD systems for Doctrine entities by:
 
-* Simplifying the filtering and sorting operations
-* Managing the (optional) pagination
-* Making the hydration mode accesible to top-level methods (for REST-oriented APIs)
+* simplifying filtering and sorting operations
+* handling the (optional) pagination
+* making the hydration mode accessible to top-level methods (for REST-oriented APIs)
 
 This bundle uses the following libraries/framework:
 
@@ -55,7 +55,7 @@ class AppKernel extends Kernel
 
 ## Configuration
 
-No app configuration is needed; just install the bundle and create your entities' classes (repositories, services and controllers).
+No app configuration is needed; just install the bundle and create your entities classes (**repositories**, **services** and **controllers**).
 
 ## Usage
 
@@ -100,8 +100,8 @@ Then you will be able to call the following methods:
 
 These methods require two parameters:
 
-* An instance of the current session (taken from `$request->getSession()`, for example)
-* The string message that needs to be shown
+* an instance of the current session (taken from `$request->getSession()`, for example)
+* the string message that needs to be shown
 
 You can also directly call the base `addUserFlash` method:
 
