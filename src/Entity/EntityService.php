@@ -239,6 +239,24 @@ abstract class EntityService
     }
 
     /**
+     * Adds a single filter to the session; set the `overwrite` flag to `false`
+     * if you want to preserve an already existing value.
+     *
+     * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+     * @param string $filterName
+     * @param mixed $filterValue
+     * @param boolean $overwrite
+     */
+    public function addFilter(SessionInterface $session, $filterName, $filterValue, $overwrite = true)
+    {
+        if (!$overwrite && $this->hasFilter($session, $filterName)) {
+            return;
+        }
+
+        $session->set($this->getFilterPrefix() . $filterName, $filterValue);
+    }
+
+    /**
      * Removes filters and sorting options from the session for this entity.
      *
      * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
