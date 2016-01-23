@@ -192,11 +192,11 @@ The repository gives you access to the following methods:
 * `getEntities($options = array(), $hydrationMode = AbstractQuery::HYDRATE_OBJECT)`
 * `getPaginatedEntities($options = array(), $hydrationMode = AbstractQuery::HYDRATE_OBJECT)`
 
-The first two (`getEntity` and `getEntityBy`) extract and returns a single entity from the database; you can specify the hydration mode for both of them (quite usefult when you don't need the ORM overhead).
+The first two (`getEntity` and `getEntityBy`) extract and return a single entity from the database; you can specify the hydration mode for both of them (quite usefult when you don't need the ORM overhead).
 
 ##### getEntityBy
 
-The `getEntityBy` method accept also an array of filters; if, for example, you want to load the category with name "Toys":
+The `getEntityBy` method accepts also an array of filters; for example, if you want to load the category with name "Toys":
 
 ```php
 $categoryRepository->getEntityBy([
@@ -237,12 +237,12 @@ If you don't specify any sorting rules, the repository will use the default ones
 
 ##### getPaginatedEntities
 
-The `getPaginatedEntities` method works like to the `getEntities` one; it also adds pagination to the list by using the `Doctrine\ORM\Tools\Pagination\Paginator` class.
+The `getPaginatedEntities` method works like the `getEntities` one; it also adds pagination to the list by using the `Doctrine\ORM\Tools\Pagination\Paginator` class.
 
 For paginating a list of entities, the methods needs these parameters:
 
-* "elementsPerPage": the number of entities to be loaded on each page
-* "page": the current page number (defaults to 1)
+* `elementsPerPage`: the number of entities to be loaded on each page
+* `page`: the current page number (defaults to 1)
 
 For example, to make our products list filtered, sorted and paginated, you should write something like the following piece of code:
 
@@ -255,7 +255,7 @@ $productRepository->getPaginatedEntities([
 ]);
 ```
 
-As you can see, we have requested the second page of our list of products, filtered to see the published products only and sorted by their creation date.
+As you can see, we have requested the second page of our list of products, filtered by published products only and sorted by their creation date.
 
 #### Custom filters
 
