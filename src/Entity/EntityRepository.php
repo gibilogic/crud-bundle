@@ -160,6 +160,10 @@ class EntityRepository extends BaseRepository
                 continue;
             }
 
+            if (null === $value || '' === $value) {
+                continue;
+            }
+
             $field = $this->addEntityAlias($field);
             if (is_array($value)) {
                 $value = array_map(function ($element) {
