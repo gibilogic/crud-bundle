@@ -178,6 +178,27 @@ abstract class EntityService
     }
 
     /**
+     * Removes a list of entities.
+     *
+     * @param array $ids
+     * @return bool
+     */
+    public function removeEntities(array $ids)
+    {
+        try {
+            foreach ($this->getRepository()->getEntitiesById($ids) as $entity) {
+                $this->entityManager->remove($entity);
+            }
+
+            $this->entityManager->flush();
+        } catch (\Exception $ex) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Returns the current filters for the entity, if any.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request

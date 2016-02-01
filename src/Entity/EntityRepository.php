@@ -53,6 +53,22 @@ class EntityRepository extends BaseRepository
     }
 
     /**
+     * Returns a list of entities extracted by their IDs.
+     *
+     * @param array $ids
+     * @param integer $hydrationMode
+     * @return array
+     */
+    public function getEntitiesById(array $ids, $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
+    {
+        $qb = $this->getQueryBuilder();
+
+        return $qb->andWhere($qb->expr()->in('e.id', $ids))
+            ->getQuery()
+            ->execute(null, $hydrationMode);
+    }
+
+    /**
      * Returns a list of all the entities.
      *
      * @param array $options
