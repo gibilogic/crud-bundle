@@ -218,6 +218,12 @@ class EntityRepository extends BaseRepository
                 continue;
             }
 
+            $methodName = sprintf('add%sSorting', ucfirst($field));
+            if (method_exists($this, $methodName)) {
+                $this->$methodName($queryBuilder, $sortOrder);
+                continue;
+            }
+
             $queryBuilder->addOrderBy($this->addEntityAlias($field), strtolower($sortOrder));
         }
 
