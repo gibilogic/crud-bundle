@@ -146,16 +146,11 @@ abstract class EntityService
      */
     public function saveEntity($entity)
     {
-        try {
-            if (!$this->entityManager->contains($entity)) {
-                $this->entityManager->persist($entity);
-            }
-
-            $this->entityManager->flush();
-        } catch (\Exception $ex) {
-            return false;
+        if (!$this->entityManager->contains($entity)) {
+            $this->entityManager->persist($entity);
         }
 
+        $this->entityManager->flush();
         return true;
     }
 
@@ -167,13 +162,8 @@ abstract class EntityService
      */
     public function removeEntity($entity)
     {
-        try {
-            $this->entityManager->remove($entity);
-            $this->entityManager->flush();
-        } catch (\Exception $ex) {
-            return false;
-        }
-
+        $this->entityManager->remove($entity);
+        $this->entityManager->flush();
         return true;
     }
 
@@ -185,16 +175,12 @@ abstract class EntityService
      */
     public function removeEntities(array $ids)
     {
-        try {
-            foreach ($this->getRepository()->getEntitiesById($ids) as $entity) {
-                $this->entityManager->remove($entity);
-            }
 
-            $this->entityManager->flush();
-        } catch (\Exception $ex) {
-            return false;
+        foreach ($this->getRepository()->getEntitiesById($ids) as $entity) {
+            $this->entityManager->remove($entity);
         }
 
+        $this->entityManager->flush();
         return true;
     }
 
@@ -436,7 +422,7 @@ abstract class EntityService
             return array();
         }
 
-        $validKeys = array_filter(array_keys($values), function ($name) use ($prefix) {
+        $validKeys = array_filter(array_keys($values), function($name) use ($prefix) {
             return (0 === strpos($name, $prefix));
         });
 
@@ -446,7 +432,7 @@ abstract class EntityService
         }
 
         return array_combine(
-            array_map(function ($key) use ($prefix) {
+            array_map(function($key) use ($prefix) {
                 return str_replace($prefix, '', $key);
             }, array_keys($results)), $results
         );
