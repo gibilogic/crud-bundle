@@ -103,7 +103,8 @@ abstract class EntityService
         }
 
         $entities = $this->getRepository()->getPaginatedEntities($options);
-        $options['pages'] = (int)ceil($entities->count() / $options['elementsPerPage']);
+        $options['elements'] = $entities->count();
+        $options['pages'] = (int)ceil($options['elements'] / $options['elementsPerPage']);
 
         return array(
             'entities' => $entities,
@@ -130,7 +131,8 @@ abstract class EntityService
         }
 
         $entities = $this->getRepository()->getPaginatedEntities($options, AbstractQuery::HYDRATE_ARRAY);
-        $options['pages'] = (int)ceil($entities->count() / $options['elementsPerPage']);
+        $options['elements'] = $entities->count();
+        $options['pages'] = (int)ceil($options['elements'] / $options['elementsPerPage']);
 
         return array(
             'entities' => (array)$entities->getIterator(),
