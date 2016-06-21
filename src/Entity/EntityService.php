@@ -402,8 +402,8 @@ abstract class EntityService
      */
     private function getValuesFromRequest(Request $request)
     {
-        if ($request->request->count() > 0) {
-            return $request->request->all();
+        if ($request->query->count() > 0 || $request->request->count() > 0) {
+            return array_merge($request->query->all(), $request->request->all());
         }
 
         $values = json_decode($request->getContent(), true);
