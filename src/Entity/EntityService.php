@@ -404,7 +404,7 @@ abstract class EntityService
     {
         $values = array_merge($request->query->all(), $request->request->all());
         $contentValues = json_decode($request->getContent(), true);
-        if (is_array($values)) {
+        if (is_array($contentValues)) {
             $values = array_merge($values, $contentValues);
         }
 
