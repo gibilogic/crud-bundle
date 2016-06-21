@@ -402,12 +402,13 @@ abstract class EntityService
      */
     private function getValuesFromRequest(Request $request)
     {
-        if ($request->query->count() > 0 || $request->request->count() > 0) {
-            return array_merge($request->query->all(), $request->request->all());
+        $values = array_merge($request->query->all(), $request->request->all());
+        $contentValues = json_decode($request->getContent(), true);
+        if (is_array($values)) {
+            $values = array_merge($values, $contentValues);
         }
 
-        $values = json_decode($request->getContent(), true);
-        return is_array($values) ? $values : array();
+        return $values;
     }
 
     /**
