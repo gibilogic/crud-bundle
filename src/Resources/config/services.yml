@@ -1,9 +1,1 @@
 services:
-    gibi.slugger:
-        class: Gibilogic\CrudBundle\Service\Slugger
-
-    gibi.type.entity_hidden:
-        class: Gibilogic\CrudBundle\Form\EntityHiddenType
-        arguments: ["@doctrine.orm.entity_manager"]
-        tags:
-            - { name: form.type, alias: entity_hidden }

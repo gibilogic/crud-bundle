@@ -21,7 +21,6 @@ use Symfony\Component\Config\FileLocator;
  */
 class GibilogicCrudExtension extends Extension
 {
-
     /**
      * {@inheritdoc}
      */

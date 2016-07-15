@@ -1,23 +1,36 @@
 {% set isEmpty = (pages == 0) %}
 {% set isFirstPage = (currentPage == 1) %}
 {% set isLastPage = (currentPage == pages) %}
-<ul class="pagination pull-right" data-baseurl="{{ url(routeName, routeParams|merge({ 'page': 0 })) }}">
-    <li class="{% if isFirstPage %}disabled{% endif %}">
-        <a href="{{ isFirstPage ? 'javascript:;' : path(routeName, routeParams|merge({ 'page': 1 })) }}">&laquo;</a>
-    </li>
-    <li class="{% if isFirstPage %}disabled{% endif %}">
-        <a href="{{ isFirstPage ? 'javascript:;' : path(routeName, routeParams|merge({ 'page': currentPage > 1 ? currentPage - 1 : 1 })) }}">&lsaquo;</a>
-    </li>
-    <li class="input-container">
-        <span>
-            <input type="text" value="{{ currentPage }}" class="form-control input-sm" data-page="{{ currentPage }}" data-pages="{{ pages }}" />
-            &nbsp;di&nbsp;{{ pages > 0 ? pages : 1 }}
-        </span>
-    </li>
-    <li class="{% if isLastPage or isEmpty %}disabled{% endif %}">
-        <a href="{{ isLastPage or isEmpty ? 'javascript:;' : path(routeName, routeParams|merge({ 'page': currentPage + 1 })) }}">&rsaquo;</a>
-    </li>
-    <li class="{% if isLastPage or isEmpty %}disabled{% endif %}">
-        <a href="{{ isLastPage or isEmpty ? 'javascript:;' : path(routeName, routeParams|merge({ 'page': pages > 0 ? pages : 1 })) }}">&raquo;</a>
-    </li>
-</ul>
+{% set numberOfPrevPage = min(currentPage - 1, linksPerSide) %}
+{% set numberOfNextPage = min(linksPerSide, pages - currentPage) %}
+<div class="text-center">
+    <ul class="pagination pagination-sm">
+        <li class="{% if isFirstPage %}disabled{% endif %}">
+            <a href="{{ isFirstPage ? 'javascript:;' : path(routeName, routeParams|merge({ 'pagina': 1 })) }}" title="Prima pagina">&laquo;</a>
+        </li>
+        <li class="{% if isFirstPage %}disabled{% endif %}">
+            <a href="{{ isFirstPage ? 'javascript:;' : path(routeName, routeParams|merge({ 'pagina': currentPage > 1 ? currentPage - 1 : 1 })) }}" title="Pagina precedente">&lsaquo;</a>
+        </li>
+        {% if not isFirstPage %}
+            {% for page in numberOfPrevPage..1 %}
+                <li>
+                    <a href="{{ path(routeName, routeParams|merge({ 'pagina': currentPage - page })) }}" title="Pagina {{ currentPage - page }}">{{ currentPage - page }}</a>
+                </li>
+            {% endfor %}
+        {% endif %}
+        <li class="active"><span>{{ currentPage }}</span></li>
+        {% if not isLastPage %}
+            {% for page in 1..numberOfNextPage %}
+                <li>
+                    <a href="{{ path(routeName, routeParams|merge({ 'pagina': currentPage + page })) }}" title="Pagina {{ currentPage + page }}">{{ currentPage + page }}</a>
+                </li>
+            {% endfor %}
+        {% endif %}
+        <li class="{% if isLastPage or isEmpty %}disabled{% endif %}">
+            <a href="{{ isLastPage or isEmpty ? 'javascript:;' : path(routeName, routeParams|merge({ 'pagina': currentPage + 1 })) }}" title="Pagina successiva">&rsaquo;</a>
+        </li>
+        <li class="{% if isLastPage or isEmpty %}disabled{% endif %}">
+            <a href="{{ isLastPage or isEmpty ? 'javascript:;' : path(routeName, routeParams|merge({ 'pagina': pages > 0 ? pages : 1 })) }}" title="Ultima pagina">&raquo;</a>
+        </li>
+    </ul>
+</div>
