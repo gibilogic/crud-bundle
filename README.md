@@ -14,20 +14,20 @@ This bundle uses the following libraries/framework:
 * Doctrine ORM
 * Twig
 
-**WARNING -** Do **not** use the older 1.* version: it **won't be supported** any more. So, switch to the 2.* version and happy coding!
+**ATTENTION -** Do **not** use the older 1.* version: it **won't be supported** any more. So, switch to the 2.* version and happy coding!
 
 ## Installation
 
 Add this bundle to the composer.json of your application with the console command:
 
 ```bash
-composer require gibilogic/crud-bundle dev-2.0-dev
+composer require gibilogic/crud-bundle
 ```
 
 Or, if you are using `composer.phar`, use the console command:
 
 ```bash
-php composer.phar require gibilogic/crud-bundle dev-2.0-dev
+php composer.phar require gibilogic/crud-bundle
 ```
 
 Then add the bundle to your app's `AppKernel` class:
@@ -161,7 +161,12 @@ protected function getBaseQueryBuilder()
  */
 protected function getSortableFields()
 {
-    return array('id' => true, 'name' => true, 'parent' => true, 'createdAt' => true);
+    return [
+        'id' => true,
+        'name' => true,
+        'parent' => true,
+        'createdAt' => true
+    ];
 }
 
 /**
@@ -170,7 +175,9 @@ protected function getSortableFields()
  */
 protected function getDefaultSorting()
 {
-    return array('name' => 'asc');
+    return [
+        'name' => 'asc'
+    ];
 }
 ```
 
@@ -179,7 +186,10 @@ Fields inside the `getSortableFields` and `getDefaultSorting` methods are not li
 ```php
 protected function getDefaultSorting()
 {
-    return array('p.name' => 'asc', 'e.name' => 'asc');
+    return [
+        'p.name' => 'asc',
+        'e.name' => 'asc'
+    ];
 }
 ```
 
