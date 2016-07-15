@@ -3,11 +3,11 @@
     "type": "symfony-bundle",
     "description": "GiBiLogic CRUD Bundle",
     "keywords": [ "crud" ],
-    "homepage": "http://www.gibilogic.com",
+    "homepage": "https://github.com/gibilogic/crud-bundle",
     "license": "MIT",
     "authors": [
         {
-            "name":     "GiBilogic Snc",
+            "name":     "GiBilogic Srl",
             "homepage": "http://www.gibilogic.com",
             "email":    "info@gibilogic.com"
         }
@@ -18,13 +18,7 @@
         "doctrine/orm": "~2.2,>=2.2.3",
         "doctrine/doctrine-bundle": ">=1.2"
     },
-    "require-dev": {
-        "phpunit/phpunit": "~4.8"
-    },
     "autoload": {
         "psr-4": { "Gibilogic\\CrudBundle\\": "src/" }
-    },
-    "autoload-dev": {
-        "psr-4": { "Gibilogic\\CrudBundle\\Tests\\": "tests/" }
     }
 }
