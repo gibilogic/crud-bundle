@@ -15,6 +15,8 @@ use Doctrine\ORM\EntityRepository as BaseRepository;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Gibilogic\CrudBundle\Model\EntityRepositoryOptionsResolver;
+use Gibilogic\CrudBundle\Model\PaginatedEntityRepositoryOptionsResolver;
 
 /**
  * EntityRepository class.
@@ -30,12 +32,13 @@ class EntityRepository extends BaseRepository
      * @param integer $hydrationMode
      * @return mixed
      *
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @deprecated Deprecated since 2.0.4; to be removed in 3.0.0. Use the basic `find()` method instead
      */
     public function getEntity($id, $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
-        return $this->getQueryBuilder(array('id' => $id))
+        return $this->getQueryBuilder(['id' => $id])
             ->getQuery()
+            ->setMaxResults(1)
             ->getOneOrNullResult($hydrationMode);
     }
 
@@ -43,13 +46,12 @@ class EntityRepository extends BaseRepository
      * @param array $filters
      * @param integer $hydrationMode
      * @return mixed
-     *
-     * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function getEntityBy(array $filters, $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
+    public function getEntityBy(array $filters = [], $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
         return $this->getQueryBuilder($filters)
             ->getQuery()
+            ->setMaxResults(1)
             ->getOneOrNullResult($hydrationMode);
     }
 
@@ -62,9 +64,7 @@ class EntityRepository extends BaseRepository
      */
     public function getEntitiesById(array $ids, $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
-        $qb = $this->getQueryBuilder();
-
-        return $qb->andWhere($qb->expr()->in('e.id', $ids))
+        return $this->getQueryBuilder(['id' => $ids])
             ->getQuery()
             ->execute(null, $hydrationMode);
     }
@@ -76,12 +76,10 @@ class EntityRepository extends BaseRepository
      * @param integer $hydrationMode
      * @return array
      */
-    public function getEntities($options = array(), $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
+    public function getEntities(array $options = [], $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
-        $filters = isset($options['filters']) ? $options['filters'] : array();
-        $sorting = isset($options['sorting']) ? $options['sorting'] : array();
-
-        return $this->getQueryBuilder($filters, $sorting)
+        $options = EntityRepositoryOptionsResolver::createAndResolve($options);
+        return $this->getQueryBuilder($options['filters'], $options['sorting'])
             ->getQuery()
             ->execute(null, $hydrationMode);
     }
@@ -93,55 +91,16 @@ class EntityRepository extends BaseRepository
      * @param integer $hydrationMode
      * @return \Doctrine\ORM\Tools\Pagination\Paginator
      */
-    public function getPaginatedEntities($options = array(), $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
+    public function getPaginatedEntities(array $options = [], $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
     {
-        if (!isset($options['elementsPerPage'])) {
-            throw new \InvalidArgumentException('You must specify the number of elements per page.', 500);
-        }
-        if (!isset($options['page'])) {
-            throw new \InvalidArgumentException('You must specify the page number.', 500);
-        }
-
-        $filters = isset($options['filters']) ? $options['filters'] : array();
-        $sorting = isset($options['sorting']) ? $options['sorting'] : array();
-
+        $options = PaginatedEntityRepositoryOptionsResolver::createAndResolve($options);
         $queryBuilder = $this->addPagination(
-            $this->getQueryBuilder($filters, $sorting),
+            $this->getQueryBuilder($options['filters'], $options['sorting']),
             $options['elementsPerPage'],
             $options['page']
         );
 
         return new Paginator($queryBuilder->getQuery()->setHydrationMode($hydrationMode));
-    }
-
-    /**
-     * Returns a list of sortable fields.
-     *
-     * @return array
-     */
-    protected function getSortableFields()
-    {
-        return array('id' => true);
-    }
-
-    /**
-     * Returns the default sorting for the entity.
-     *
-     * @return array
-     */
-    protected function getDefaultSorting()
-    {
-        return array('id' => 'asc');
-    }
-
-    /**
-     * Returns a basic QueryBuilder for the current entity.
-     *
-     * @return \Doctrine\ORM\QueryBuilder
-     */
-    protected function getBaseQueryBuilder()
-    {
-        return $this->createQueryBuilder('e');
     }
 
     /**
@@ -151,11 +110,17 @@ class EntityRepository extends BaseRepository
      * @param array $sorting
      * @return \Doctrine\ORM\QueryBuilder
      */
-    protected function getQueryBuilder($filters = array(), $sorting = array())
+    protected function getQueryBuilder(array $filters = [], array $sorting = [])
     {
-        $queryBuilder = $this->addSorting($this->getBaseQueryBuilder(), $sorting);
+        $queryBuilder = $this->getBaseQueryBuilder();
         if (!empty($filters)) {
             $this->addFilters($queryBuilder, $filters);
+        }
+
+        if (empty($sorting)) {
+            $this->addSorting($queryBuilder, $this->getDefaultSorting());
+        } else {
+            $this->addSorting($queryBuilder, $sorting);
         }
 
         return $queryBuilder;
@@ -173,23 +138,21 @@ class EntityRepository extends BaseRepository
         foreach ($filters as $field => $value) {
             $methodName = sprintf('add%sFilter', ucfirst($field));
             if (method_exists($this, $methodName)) {
+                // This field has a custom filtering method
                 $this->$methodName($queryBuilder, $value);
                 continue;
             }
 
-            if (null === $value || '' === $value) {
+            if (null === $value || '' === $value || (is_array($value) && 0 == count($value))) {
+                // Skip: value is blank
                 continue;
             }
 
             $field = $this->addEntityAlias($field);
             if (is_array($value)) {
-                $value = array_map(function ($element) {
-                    return "'$element'";
-                }, $value);
-
-                $queryBuilder->andWhere($queryBuilder->expr()->in($field, implode(',', $value)));
+                $queryBuilder->andWhere($queryBuilder->expr()->in($field, $value));
             } else {
-                $queryBuilder->andWhere($queryBuilder->expr()->eq($field, "'$value'"));
+                $queryBuilder->andWhere($queryBuilder->expr()->eq($field, $queryBuilder->expr()->literal($value)));
             }
         }
 
@@ -203,14 +166,10 @@ class EntityRepository extends BaseRepository
      * @param array $sorting
      * @return \Doctrine\ORM\QueryBuilder
      */
-    protected function addSorting(QueryBuilder $queryBuilder, $sorting = array())
+    protected function addSorting(QueryBuilder $queryBuilder, array $sorting = [])
     {
-        if (empty($sorting)) {
-            $sorting = $this->getDefaultSorting();
-        }
-
         foreach ($sorting as $field => $sortOrder) {
-            if (!$this->isFieldValid($field)) {
+            if (!$this->isFieldSortable($field)) {
                 // Skip: invalid field
                 continue;
             }
@@ -238,21 +197,15 @@ class EntityRepository extends BaseRepository
      * @param integer $elementsPerPage
      * @param integer $page
      * @return \Doctrine\ORM\QueryBuilder
-     *
-     * @throws \InvalidArgumentException
      */
     protected function addPagination(QueryBuilder $queryBuilder, $elementsPerPage, $page = 1)
     {
-        if (!is_numeric($elementsPerPage)) {
-            throw new \InvalidArgumentException(sprintf("The number of elements per page must be an integer number, '%s' given.", gettype($elementsPerPage)), 500);
-        }
-        if (!is_numeric($page)) {
-            throw new \InvalidArgumentException(sprintf("The page number must be an integer number, '%s' given.", gettype($page)), 500);
-        }
+        $elementsPerPage = (int)$elementsPerPage;
+        $page = (int)$page;
 
         return $queryBuilder
             ->setMaxResults($elementsPerPage)
-            ->setFirstResult($elementsPerPage * ((int)$page - 1));
+            ->setFirstResult($elementsPerPage * ($page - 1));
     }
 
     /**
@@ -277,12 +230,42 @@ class EntityRepository extends BaseRepository
     }
 
     /**
+     * Returns a list of sortable fields.
+     *
+     * @return array
+     */
+    protected function getSortableFields()
+    {
+        return ['id' => true];
+    }
+
+    /**
+     * Returns the default sorting for the entity.
+     *
+     * @return array
+     */
+    protected function getDefaultSorting()
+    {
+        return ['id' => 'asc'];
+    }
+
+    /**
+     * Returns a basic QueryBuilder for the current entity.
+     *
+     * @return \Doctrine\ORM\QueryBuilder
+     */
+    protected function getBaseQueryBuilder()
+    {
+        return $this->createQueryBuilder('e');
+    }
+
+    /**
      * Returns TRUE if the field is sortable, FALSE otherwise.
      *
      * @param string $field
      * @return boolean
      */
-    private function isFieldValid($field)
+    private function isFieldSortable($field)
     {
         return array_key_exists($field, $this->getSortableFields());
     }
@@ -295,7 +278,7 @@ class EntityRepository extends BaseRepository
      */
     private function isSortOrderValid($sortOrder)
     {
-        return in_array(strtolower($sortOrder), array('asc', 'desc'));
+        return in_array(strtolower($sortOrder), ['asc', 'desc']);
     }
 
     /**
@@ -306,6 +289,6 @@ class EntityRepository extends BaseRepository
      */
     private function addEntityAlias($field)
     {
-        return strpos($field, '.') !== false ? $field : sprintf('e.%s', $field);
+        return false !== strpos($field, '.') ? $field : sprintf('e.%s', $field);
     }
 }
