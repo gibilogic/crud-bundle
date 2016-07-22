@@ -13,12 +13,11 @@
         }
     ],
     "require": {
-        "php": ">=5.3.3",
-        "symfony/symfony": ">=2.7",
-        "doctrine/orm": "~2.2,>=2.2.3",
-        "doctrine/doctrine-bundle": ">=1.2"
+        "php": ">=5.4",
+        "symfony/http-kernel": "^3.1",
+        "doctrine/orm": "^2.4.8"
     },
     "autoload": {
-        "psr-4": { "Gibilogic\\CrudBundle\\": "src/" }
+        "psr-4": { "Gibilogic\\CrudBundle\\": "" }
     }
 }

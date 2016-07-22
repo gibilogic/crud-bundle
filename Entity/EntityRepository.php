@@ -1,17 +1,18 @@
 <?php
 
-/**
- * @package     Gibilogic\CrudBundle
- * @subpackage  Entity
- * @author      GiBiLogic <info@gibilogic.com>
- * @authorUrl   http://www.gibilogic.com
+/*
+ * This file is part of the GiBilogic CrudBundle package.
+ *
+ * (c) GiBilogic Srl <info@gibilogic.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace Gibilogic\CrudBundle\Entity;
 
 use Doctrine\ORM\EntityRepository as BaseRepository;
 use Doctrine\ORM\AbstractQuery;
-use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 
