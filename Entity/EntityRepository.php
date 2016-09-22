@@ -189,7 +189,7 @@ class EntityRepository extends BaseRepository
 
                 $queryBuilder->andWhere($queryBuilder->expr()->in($field, implode(',', $value)));
             } else {
-                $queryBuilder->andWhere($queryBuilder->expr()->eq($field, "'$value'"));
+                $queryBuilder->andWhere($queryBuilder->expr()->eq($field, $queryBuilder->expr()->literal($value)));
             }
         }
 
