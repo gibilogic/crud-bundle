@@ -228,10 +228,10 @@ abstract class EntityService
             return $this->getSortingFromRequest($request);
         }
 
-        $sorting = array_replace(
-            $this->getSortingFromSession($request->getSession()),
-            $this->getSortingFromRequest($request)
-        );
+        $sorting = $this->getSortingFromRequest($request);
+        if (empty($sorting)) {
+            $sorting = $this->getSortingFromSession($request->getSession());
+        }
 
         $this->saveSorting($request->getSession(), $sorting);
         return $sorting;
