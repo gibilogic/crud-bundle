@@ -13,7 +13,7 @@ namespace Gibilogic\CrudBundle\Entity;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\AbstractQuery;
 
 /**
@@ -22,7 +22,7 @@ use Doctrine\ORM\AbstractQuery;
 abstract class EntityService
 {
     /**
-     * @var \Doctrine\ORM\EntityManager $entityManager
+     * @var \Doctrine\ORM\EntityManagerInterface $entityManager
      */
     protected $entityManager;
 
@@ -30,20 +30,6 @@ abstract class EntityService
      * @var integer $elementsPerPage
      */
     protected $elementsPerPage;
-
-    /**
-     * Returns the Symfony-styled entity name.
-     *
-     * @return string
-     */
-    abstract public function getEntityName();
-
-    /**
-     * Returns the entity's session prefix.
-     *
-     * @return string
-     */
-    abstract public function getEntityPrefix();
 
     /**
      * Returns a new instance of the managed entity.
@@ -55,13 +41,45 @@ abstract class EntityService
     /**
      * Constructor.
      *
-     * @param \Doctrine\ORM\EntityManager $entityManager
+     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      * @param integer $elementsPerPage
      */
-    public function __construct(EntityManager $entityManager, $elementsPerPage)
+    public function __construct(EntityManagerInterface $entityManager, $elementsPerPage)
     {
         $this->entityManager = $entityManager;
         $this->elementsPerPage = $elementsPerPage;
+    }
+
+    /**
+     * Returns base entity name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        $fqdnClassName = get_class($this);
+        $className = substr($fqdnClassName, strrpos($fqdnClassName, '\\') + 1);
+        return str_replace("Service", "", $className);
+    }
+
+    /**
+     * Returns the Symfony-styled entity name.
+     *
+     * @return string
+     */
+    public function getEntityName()
+    {
+        return 'AppBundle:'.$this->getName();
+    }
+
+    /**
+     * Returns the entity's session prefix.
+     *
+     * @return string
+     */
+    public function getEntityPrefix()
+    {
+        return 'app_'.strtolower($this->getName());
     }
 
     /**
